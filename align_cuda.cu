@@ -117,16 +117,36 @@ __global__ void increment_matches_kernel(const unsigned long *d_pat_found, const
 
         for (unsigned long ind = 0; ind < length; ind++)
         {
-            // Address for atomic operation
             int *addr = &d_seq_matches[start_pos + ind];
 
-            // Replicate the logic: if (val == NOT_FOUND) val = 0; else val++;
-            // This is done by trying to swap NOT_FOUND with 0.
-            // If the swap fails, it means another thread already set it, so we just increment.
-            // Note: atomicCAS returns the OLD value at the address.
-            if (atomicCAS(addr, NOT_FOUND, 0) != NOT_FOUND)
+            int old_val = *addr; // Lettura non atomica, ma va bene perché è solo il punto di partenza
+
+            // Loop finché l'aggiornamento non ha successo
+            while (true)
             {
-                atomicAdd(addr, 1);
+                // Calcola il nuovo valore desiderato basandoti sul vecchio valore letto
+                int new_val;
+                if (old_val == NOT_FOUND)
+                {
+                    new_val = 0;
+                }
+                else
+                {
+                    new_val = old_val + 1;
+                }
+
+                // Tenta di scambiare atomicamente old_val con new_val
+                int current_val_in_mem = atomicCAS(addr, old_val, new_val);
+
+                // Controlla se l'operazione è riuscita
+                if (current_val_in_mem == old_val)
+                {
+                    break; // Successo! Esci dal loop.
+                }
+
+                // Fallimento: un altro thread ha modificato il valore.
+                // Riprova il loop con il valore più recente.
+                old_val = current_val_in_mem;
             }
         }
     }
