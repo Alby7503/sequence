@@ -44,6 +44,9 @@ all: $(OBJS)
 align_seq: align.c rng.c
 	$(CC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
 
+align_seq_new: align_new.c rng.c
+	$(CC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
+
 align_omp: align_omp.c rng.c
 	$(CC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
 

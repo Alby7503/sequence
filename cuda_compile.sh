@@ -1,1 +1,0 @@
-nvcc -O3 align_cuda.cu -o align_cuda
