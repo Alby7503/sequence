@@ -70,6 +70,29 @@ double cp_Wtime()
  *
  */
 
+__global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, float prob_C, float prob_A, char *d_seq, unsigned long length)
+{
+    // Calcola l'ID univoco del thread corrente.
+    unsigned long ind = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // Ogni thread genera un carattere della sequenza.
+    if (ind < length)
+    {
+        rng_t local_rng = *d_random; // Copia il generatore di numeri casuali dalla memoria della GPU.
+        rng_skip(&local_rng, ind); // Salta il generatore di numeri casuali per ottenere un carattere unico.
+        double prob = rng_next(&local_rng);
+        //__syncthreads(); // Sincronizza i thread per garantire che il generatore di numeri casuali sia aggiornato.
+        if (prob < prob_G)
+            d_seq[ind] = 'G';
+        else if (prob < prob_C)
+            d_seq[ind] = 'C';
+        else if (prob < prob_A)
+            d_seq[ind] = 'A';
+        else
+            d_seq[ind] = 'T';
+    }
+}
+
 /*
  * KERNEL CUDA: Cerca la prima corrispondenza per ogni pattern in parallelo.
  * '__global__' indica che questa funzione viene eseguita sulla GPU e può essere chiamata dalla CPU.
@@ -384,6 +407,7 @@ int main(int argc, char *argv[])
 
     /* Seleziona il dispositivo GPU da usare (in questo caso il dispositivo 0). */
     CUDA_CHECK_FUNCTION(cudaSetDevice(0));
+    CUDA_CHECK_FUNCTION(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
 
     /* 2. Inizializzazione delle strutture dati sulla CPU (Host). */
     rng_t random = rng_new(seed);
@@ -541,15 +565,32 @@ int main(int argc, char *argv[])
      *
      */
     /* 2.1. Ora genera la sequenza principale sulla CPU (Host). */
-    char *sequence = (char *)malloc(sizeof(char) * seq_length);
-    if (sequence == NULL)
+    char *sequence_h = (char *)malloc(sizeof(char) * seq_length);
+    if (sequence_h == NULL)
     {
         fprintf(stderr, "\n-- Error allocating the sequence for size: %lu\n", seq_length);
         exit(EXIT_FAILURE);
     }
 
-    random = rng_new(seed);
-    generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
+    //random = rng_new(seed);
+    //generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
+
+    /* Lancia il kernel CUDA per generare la sequenza sulla GPU. */
+    rng_t random_seq = rng_new(seed);
+    rng_t *d_random;
+    char *d_sequence;
+    CUDA_CHECK_FUNCTION(cudaMalloc(&d_random, sizeof(rng_t)));
+    CUDA_CHECK_FUNCTION(cudaMemcpy(d_random, &random_seq, sizeof(rng_t), cudaMemcpyHostToDevice));
+    CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length)); // Alloca memoria sulla GPU per la sequenza.
+    unsigned long threads_per_block = 256;
+    unsigned long grid_size = (seq_length + threads_per_block - 1) / threads_per_block;
+    generate_rng_sequence_kernel<<<grid_size, threads_per_block>>>(d_random, prob_G, prob_C, prob_A, d_sequence, seq_length);
+    CUDA_CHECK_KERNEL(); // Controlla errori dopo il lancio
+    CUDA_CHECK_FUNCTION(cudaMemcpy(&random_seq, d_random, sizeof(rng_t), cudaMemcpyDeviceToHost));
+    CUDA_CHECK_FUNCTION(cudaFree(d_random)); // Libera la memoria allocata per il generatore di numeri casuali sulla GPU.
+    CUDA_CHECK_FUNCTION(cudaMemcpy(sequence_h, d_sequence, sizeof(char) * seq_length, cudaMemcpyDeviceToHost)); // Copia la sequenza generata dalla GPU alla CPU.
+    //sequence_h[seq_length - 1] = '\0';
+    //printf("Generated sequence: %s\n", sequence_h); // Stampa la sequenza generata.
 
 #ifdef DEBUG
     /* DEBUG: Stampa la sequenza e i pattern generati, se in modalità DEBUG. */
@@ -571,21 +612,21 @@ int main(int argc, char *argv[])
 #endif // DEBUG
 
     /* Dichiarazione dei puntatori per la memoria della GPU (Device). */
-    char *d_sequence;
+    //char *d_sequence;
     unsigned long *d_pat_length;
     char **d_pattern;
     unsigned long *d_pat_found;
     int *d_seq_matches;
 
     /* Allocazione della memoria sulla GPU per tutti gli array necessari. */
-    CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length));
+    //CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_length, sizeof(unsigned long) * pat_number));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_pattern, sizeof(char *) * pat_number));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_found, sizeof(unsigned long) * pat_number));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_seq_matches, sizeof(int) * seq_length));
 
     /* Trasferimento dei dati di input dalla CPU (Host) alla GPU (Device). */
-    CUDA_CHECK_FUNCTION(cudaMemcpy(d_sequence, sequence, sizeof(char) * seq_length, cudaMemcpyHostToDevice));
+    //CUDA_CHECK_FUNCTION(cudaMemcpy(d_sequence, sequence, sizeof(char) * seq_length, cudaMemcpyHostToDevice));
     CUDA_CHECK_FUNCTION(cudaMemcpy(d_pat_length, pat_length, sizeof(unsigned long) * pat_number, cudaMemcpyHostToDevice));
 
     /* Trasferimento dell'array di pattern (jagged array), che richiede una procedura a due passaggi. */
@@ -608,7 +649,7 @@ int main(int argc, char *argv[])
     CUDA_CHECK_FUNCTION(cudaMemcpy(d_pattern, d_pattern_in_host, sizeof(char *) * pat_number, cudaMemcpyHostToDevice));
 
     /* Configurazione per il lancio dei kernel CUDA: numero di thread per blocco e numero di blocchi nella griglia. */
-    int threads_per_block = 256;
+    //int threads_per_block = 256;
     int grid_size_pat = (pat_number + threads_per_block - 1) / threads_per_block;
     int grid_size_seq = (seq_length + threads_per_block - 1) / threads_per_block;
 
@@ -617,14 +658,23 @@ int main(int argc, char *argv[])
     // 1. Lancia il kernel per inizializzare gli array dei risultati sulla GPU.
     initialize_arrays_kernel<<<grid_size_seq, threads_per_block>>>(d_pat_found, d_seq_matches, pat_number, seq_length);
     CUDA_CHECK_KERNEL(); // Controlla errori dopo il lancio
+    // REMOVE
+    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    printf("initialize_arrays_kernel\n");
 
     // 2. Lancia il kernel per trovare i pattern.
     find_patterns_kernel<<<grid_size_pat, threads_per_block>>>(d_sequence, seq_length, d_pattern, d_pat_length, pat_number, d_pat_found);
     CUDA_CHECK_KERNEL();
+    // REMOVE
+    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    printf("find_patterns_kernel\n");
 
     // 3. Lancia il kernel per aggiornare i contatori dei match.
     increment_matches_kernel<<<grid_size_pat, threads_per_block>>>(d_pat_found, d_pat_length, pat_number, d_seq_matches);
     CUDA_CHECK_KERNEL();
+    // REMOVE
+    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    printf("increment_matches_kernel\n");
 
     /* Trasferimento dei risultati dalla GPU (Device) alla CPU (Host) per il calcolo finale e la stampa. */
     CUDA_CHECK_FUNCTION(cudaMemcpy(pat_found, d_pat_found, sizeof(unsigned long) * pat_number, cudaMemcpyDeviceToHost));
@@ -672,7 +722,7 @@ int main(int argc, char *argv[])
 #endif // DEBUG
 
     /* Liberazione delle risorse della CPU e della GPU. */
-    free(sequence);
+    free(sequence_h);
     // seq_matches verrà liberato alla fine del main.
 
     /* Liberazione della memoria allocata sulla GPU. */
