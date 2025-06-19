@@ -230,6 +230,11 @@ int main(int argc, char *argv[])
     }
     rng_t random = rng_new(seed);
     generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
+    //FILE* f = fopen("sequence_seq.txt", "w");
+    //fwrite(sequence, sizeof(char), seq_length, f);
+    //fclose(f);
+    //sequence[seq_length - 1] = '\0'; // Ensure null-termination for string functions
+    //printf("Generated sequence: %s\n", sequence); // Stampa la sequenza generata.
 
     /* 2.2. Allocate and fill patterns */
     /* 2.2.1 Allocate main structures */

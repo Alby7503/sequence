@@ -53,6 +53,9 @@ align_omp: align_omp.c rng.c
 align_mpi: align_mpi.c rng.c
 	$(MPICC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
 
+align_mpi_omp: align_mpi_omp.c rng.c
+	$(MPICC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
+
 align_cuda: align_cuda.cu rng.c
 	$(CUDACC) $(CUDAFLAGS) $(DEBUG) $< $(LIBS) -o $@
 

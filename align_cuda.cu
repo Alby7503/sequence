@@ -70,18 +70,35 @@ double cp_Wtime()
  *
  */
 
-__global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, float prob_C, float prob_A, char *d_seq, unsigned long length)
-{
+#ifdef __CUDACC__
+__host__ __device__ 
+#endif
+inline double rng_compute_skip(rng_t seq, uint64_t steps) {
+    uint64_t cur_mult = RNG_MULTIPLIER;
+    uint64_t cur_plus = RNG_INCREMENT;
+
+    uint64_t acc_mult = 1u;
+    uint64_t acc_plus = 0u;
+    while (steps > 0) {
+        if (steps & 1) {
+            acc_mult *= cur_mult;
+            acc_plus = acc_plus * cur_mult + cur_plus;
+        }
+        cur_plus = (cur_mult + 1) * cur_plus;
+        cur_mult *= cur_mult;
+        steps /= 2;
+    }
+
+    return (double) ldexpf((acc_mult * seq + acc_plus) * RNG_MULTIPLIER + RNG_INCREMENT, -64);
+}
+
+__global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, float prob_C, float prob_A, char *d_seq, unsigned long length) {
     // Calcola l'ID univoco del thread corrente.
     unsigned long ind = blockIdx.x * blockDim.x + threadIdx.x;
 
     // Ogni thread genera un carattere della sequenza.
-    if (ind < length)
-    {
-        rng_t local_rng = *d_random; // Copia il generatore di numeri casuali dalla memoria della GPU.
-        rng_skip(&local_rng, ind); // Salta il generatore di numeri casuali per ottenere un carattere unico.
-        double prob = rng_next(&local_rng);
-        //__syncthreads(); // Sincronizza i thread per garantire che il generatore di numeri casuali sia aggiornato.
+    if (ind < length) {
+        double prob = rng_compute_skip(*d_random, ind); // Salta il generatore di numeri casuali per ottenere un carattere unico.
         if (prob < prob_G)
             d_seq[ind] = 'G';
         else if (prob < prob_C)
@@ -589,6 +606,9 @@ int main(int argc, char *argv[])
     CUDA_CHECK_FUNCTION(cudaMemcpy(&random_seq, d_random, sizeof(rng_t), cudaMemcpyDeviceToHost));
     CUDA_CHECK_FUNCTION(cudaFree(d_random)); // Libera la memoria allocata per il generatore di numeri casuali sulla GPU.
     CUDA_CHECK_FUNCTION(cudaMemcpy(sequence_h, d_sequence, sizeof(char) * seq_length, cudaMemcpyDeviceToHost)); // Copia la sequenza generata dalla GPU alla CPU.
+    //FILE* f = fopen("sequence_cuda.txt", "w");
+    //fwrite(sequence_h, sizeof(char), seq_length, f);
+    //fclose(f);
     //sequence_h[seq_length - 1] = '\0';
     //printf("Generated sequence: %s\n", sequence_h); // Stampa la sequenza generata.
 

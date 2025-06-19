@@ -1,3 +1,6 @@
 align_cuda
 align_seq
 align_seq_new
+sequence_cuda.txt
+sequence_seq.txt
+.vscode/settings.json
