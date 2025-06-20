@@ -1,6 +1,7 @@
 align_cuda
 align_seq
 align_seq_new
+align_mpi_omp
 sequence_cuda.txt
 sequence_seq.txt
 .vscode/settings.json
