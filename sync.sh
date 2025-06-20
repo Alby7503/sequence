@@ -1,0 +1,1 @@
+rsync -avz --exclude-from='.rsync-exclude' --chmod=Du=rwx,Dgo=,Fu=rwx,Fgo= -r ./ avona@10.142.1.12:/mnt/beegfs/home/avona/sequence

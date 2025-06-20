@@ -71,16 +71,20 @@ double cp_Wtime()
  */
 
 #ifdef __CUDACC__
-__host__ __device__ 
+__host__ __device__
 #endif
-inline double rng_compute_skip(rng_t seq, uint64_t steps) {
+    inline double
+    rng_compute_skip(rng_t seq, uint64_t steps)
+{
     uint64_t cur_mult = RNG_MULTIPLIER;
     uint64_t cur_plus = RNG_INCREMENT;
 
     uint64_t acc_mult = 1u;
     uint64_t acc_plus = 0u;
-    while (steps > 0) {
-        if (steps & 1) {
+    while (steps > 0)
+    {
+        if (steps & 1)
+        {
             acc_mult *= cur_mult;
             acc_plus = acc_plus * cur_mult + cur_plus;
         }
@@ -89,15 +93,17 @@ inline double rng_compute_skip(rng_t seq, uint64_t steps) {
         steps /= 2;
     }
 
-    return (double) ldexpf((acc_mult * seq + acc_plus) * RNG_MULTIPLIER + RNG_INCREMENT, -64);
+    return (double)ldexpf((acc_mult * seq + acc_plus) * RNG_MULTIPLIER + RNG_INCREMENT, -64);
 }
 
-__global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, float prob_C, float prob_A, char *d_seq, unsigned long length) {
+__global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, float prob_C, float prob_A, char *d_seq, uint64_t length)
+{
     // Calcola l'ID univoco del thread corrente.
-    unsigned long ind = blockIdx.x * blockDim.x + threadIdx.x;
+    uint64_t ind = blockIdx.x * blockDim.x + threadIdx.x;
 
     // Ogni thread genera un carattere della sequenza.
-    if (ind < length) {
+    if (ind < length)
+    {
         double prob = rng_compute_skip(*d_random, ind); // Salta il generatore di numeri casuali per ottenere un carattere unico.
         if (prob < prob_G)
             d_seq[ind] = 'G';
@@ -115,9 +121,9 @@ __global__ void generate_rng_sequence_kernel(rng_t *d_random, float prob_G, floa
  * '__global__' indica che questa funzione viene eseguita sulla GPU e può essere chiamata dalla CPU.
  * Parametri: puntatori a dati che risiedono nella memoria della GPU.
  */
-__global__ void find_patterns_kernel(const char *d_sequence, unsigned long seq_length,
-                                     char **d_pattern, const unsigned long *d_pat_length,
-                                     int pat_number, unsigned long *d_pat_found)
+__global__ void find_patterns_kernel(const char *d_sequence, uint64_t seq_length,
+                                     char **d_pattern, const uint64_t *d_pat_length,
+                                     int pat_number, uint64_t *d_pat_found)
 {
     // Calcola l'ID univoco del thread corrente. Questo ID corrisponde all'indice del pattern di cui si occuperà.
     int pat_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -130,13 +136,13 @@ __global__ void find_patterns_kernel(const char *d_sequence, unsigned long seq_l
     }
 
     // Ogni thread ottiene i dati specifici per il suo pattern: la lunghezza e il puntatore al contenuto del pattern.
-    unsigned long my_pat_length = d_pat_length[pat_idx];
+    uint64_t my_pat_length = d_pat_length[pat_idx];
     char *my_pattern = d_pattern[pat_idx];
 
     // Loop principale di ricerca (brute-force): scorre tutte le possibili posizioni di partenza nella sequenza.
-    for (unsigned long start = 0; start <= seq_length - my_pat_length; start++)
+    for (uint64_t start = 0; start <= seq_length - my_pat_length; start++)
     {
-        unsigned long lind;
+        uint64_t lind;
         // Loop interno: confronta carattere per carattere il pattern con la sottosequenza corrente.
         for (lind = 0; lind < my_pat_length; lind++)
         {
@@ -161,7 +167,7 @@ __global__ void find_patterns_kernel(const char *d_sequence, unsigned long seq_l
  * KERNEL CUDA: Aggiorna l'array seq_matches in modo atomico.
  * Viene eseguito dopo find_patterns_kernel.
  */
-__global__ void increment_matches_kernel(const unsigned long *d_pat_found, const unsigned long *d_pat_length,
+__global__ void increment_matches_kernel(const uint64_t *d_pat_found, const uint64_t *d_pat_length,
                                          int pat_number, int *d_seq_matches)
 {
     // Calcola l'ID univoco del thread, che corrisponde all'indice del pattern.
@@ -172,14 +178,14 @@ __global__ void increment_matches_kernel(const unsigned long *d_pat_found, const
     }
 
     // Il thread procede solo se il suo pattern è stato effettivamente trovato nel kernel precedente.
-    if (d_pat_found[pat_idx] != (unsigned long)NOT_FOUND)
+    if (d_pat_found[pat_idx] != (uint64_t)NOT_FOUND)
     {
         // Ottiene la posizione e la lunghezza del pattern trovato.
-        unsigned long start_pos = d_pat_found[pat_idx];
-        unsigned long length = d_pat_length[pat_idx];
+        uint64_t start_pos = d_pat_found[pat_idx];
+        uint64_t length = d_pat_length[pat_idx];
 
         // Itera su ogni posizione della sequenza coperta da questo pattern.
-        for (unsigned long ind = 0; ind < length; ind++)
+        for (uint64_t ind = 0; ind < length; ind++)
         {
             // 'addr' è il puntatore alla cella di memoria in 'd_seq_matches' da aggiornare.
             int *addr = &d_seq_matches[start_pos + ind];
@@ -225,8 +231,8 @@ __global__ void increment_matches_kernel(const unsigned long *d_pat_found, const
  * KERNEL CUDA: Inizializza gli array dei risultati sulla GPU.
  * È più efficiente farlo sulla GPU che sulla CPU e poi trasferire.
  */
-__global__ void initialize_arrays_kernel(unsigned long *d_pat_found, int *d_seq_matches,
-                                         int pat_number, unsigned long seq_length)
+__global__ void initialize_arrays_kernel(uint64_t *d_pat_found, int *d_seq_matches,
+                                         int pat_number, uint64_t seq_length)
 {
     // Calcola l'ID univoco del thread.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -234,13 +240,13 @@ __global__ void initialize_arrays_kernel(unsigned long *d_pat_found, int *d_seq_
     // Inizializza l'array d_pat_found.
     if (idx < pat_number)
     {
-        d_pat_found[idx] = (unsigned long)NOT_FOUND;
+        d_pat_found[idx] = (uint64_t)NOT_FOUND;
     }
 
     // Inizializza l'array d_seq_matches usando un "grid-stride loop".
     // Questo pattern garantisce che ogni elemento dell'array venga inizializzato
     // anche se il numero di elementi è maggiore del numero di thread.
-    for (unsigned long i = idx; i < seq_length; i += gridDim.x * blockDim.x)
+    for (uint64_t i = idx; i < seq_length; i += gridDim.x * blockDim.x)
     {
         d_seq_matches[i] = NOT_FOUND;
     }
@@ -251,9 +257,9 @@ __global__ void initialize_arrays_kernel(unsigned long *d_pat_found, int *d_seq_
  * Nella versione CUDA, la sua logica è stata spostata nel kernel 'increment_matches_kernel'.
  * Viene lasciata vuota per mantenere la compatibilità con la struttura del template.
  */
-void increment_matches(int pat, unsigned long *pat_found, const unsigned long *pat_length, int *seq_matches)
+void increment_matches(int pat, uint64_t *pat_found, const uint64_t *pat_length, int *seq_matches)
 {
-    unsigned long ind;
+    uint64_t ind;
     for (ind = 0; ind < pat_length[pat]; ind++)
     {
         if (seq_matches[pat_found[pat] + ind] == NOT_FOUND)
@@ -272,11 +278,11 @@ void increment_matches(int pat, unsigned long *pat_found, const unsigned long *p
 /*
  * Function: Allocate new patttern
  */
-char *pattern_allocate(rng_t *random, unsigned long pat_rng_length_mean, unsigned long pat_rng_length_dev, unsigned long seq_length, unsigned long *new_length)
+char *pattern_allocate(rng_t *random, uint64_t pat_rng_length_mean, uint64_t pat_rng_length_dev, uint64_t seq_length, uint64_t *new_length)
 {
 
     /* Random length */
-    unsigned long length = (unsigned long)rng_next_normal(random, (double)pat_rng_length_mean, (double)pat_rng_length_dev);
+    uint64_t length = (uint64_t)rng_next_normal(random, (double)pat_rng_length_mean, (double)pat_rng_length_dev);
     if (length > seq_length)
         length = seq_length;
     if (length <= 0)
@@ -298,9 +304,9 @@ char *pattern_allocate(rng_t *random, unsigned long pat_rng_length_mean, unsigne
 /*
  * Function: Fill random sequence or pattern
  */
-void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, unsigned long length)
+void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, uint64_t length)
 {
-    unsigned long ind;
+    uint64_t ind;
     for (ind = 0; ind < length; ind++)
     {
         double prob = rng_next(random);
@@ -318,17 +324,17 @@ void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob
 /*
  * Function: Copy a sample of the sequence
  */
-void copy_sample_sequence(rng_t *random, char *sequence, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length)
+void copy_sample_sequence(rng_t *random, char *sequence, uint64_t seq_length, uint64_t pat_samp_loc_mean, uint64_t pat_samp_loc_dev, char *pattern, uint64_t length)
 {
     /* Choose location */
-    unsigned long location = (unsigned long)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
+    uint64_t location = (uint64_t)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
     if (location > seq_length - length)
         location = seq_length - length;
     if (location <= 0)
         location = 0;
 
     /* Copy sample */
-    unsigned long ind;
+    uint64_t ind;
     for (ind = 0; ind < length; ind++)
         pattern[ind] = sequence[ind + location];
 }
@@ -336,10 +342,10 @@ void copy_sample_sequence(rng_t *random, char *sequence, unsigned long seq_lengt
 /*
  * Function: Regenerate a sample of the sequence
  */
-void generate_sample_sequence(rng_t *random, rng_t random_seq, float prob_G, float prob_C, float prob_A, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length)
+void generate_sample_sequence(rng_t *random, rng_t random_seq, float prob_G, float prob_C, float prob_A, uint64_t seq_length, uint64_t pat_samp_loc_mean, uint64_t pat_samp_loc_dev, char *pattern, uint64_t length)
 {
     /* Choose location */
-    unsigned long location = (unsigned long)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
+    uint64_t location = (uint64_t)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
     if (location > seq_length - length)
         location = seq_length - length;
     if (location <= 0)
@@ -379,7 +385,7 @@ int main(int argc, char *argv[])
     }
 
     /* 1.2. Lettura dei valori degli argomenti. */
-    unsigned long seq_length = atol(argv[1]);
+    uint64_t seq_length = atol(argv[1]);
     float prob_G = atof(argv[2]);
     float prob_C = atof(argv[3]);
     float prob_A = atof(argv[4]);
@@ -393,14 +399,14 @@ int main(int argc, char *argv[])
     prob_A += prob_C;
 
     int pat_rng_num = atoi(argv[5]);
-    unsigned long pat_rng_length_mean = atol(argv[6]);
-    unsigned long pat_rng_length_dev = atol(argv[7]);
+    uint64_t pat_rng_length_mean = atol(argv[6]);
+    uint64_t pat_rng_length_dev = atol(argv[7]);
 
     int pat_samp_num = atoi(argv[8]);
-    unsigned long pat_samp_length_mean = atol(argv[9]);
-    unsigned long pat_samp_length_dev = atol(argv[10]);
-    unsigned long pat_samp_loc_mean = atol(argv[11]);
-    unsigned long pat_samp_loc_dev = atol(argv[12]);
+    uint64_t pat_samp_length_mean = atol(argv[9]);
+    uint64_t pat_samp_length_dev = atol(argv[10]);
+    uint64_t pat_samp_loc_mean = atol(argv[11]);
+    uint64_t pat_samp_loc_dev = atol(argv[12]);
 
     char pat_samp_mix = argv[13][0];
     if (pat_samp_mix != 'B' && pat_samp_mix != 'A' && pat_samp_mix != 'M')
@@ -410,7 +416,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    unsigned long seed = atol(argv[14]);
+    uint64_t seed = atol(argv[14]);
 
 #ifdef DEBUG
     /* DEBUG: Stampa degli argomenti letti, se la modalità DEBUG è attiva. */
@@ -434,7 +440,7 @@ int main(int argc, char *argv[])
 
     /* 2.2. Alloca e genera i pattern sulla CPU. */
     int pat_number = pat_rng_num + pat_samp_num;
-    unsigned long *pat_length = (unsigned long *)malloc(sizeof(unsigned long) * pat_number);
+    uint64_t *pat_length = (uint64_t *)malloc(sizeof(uint64_t) * pat_number);
     char **pattern = (char **)malloc(sizeof(char *) * pat_number);
     if (pattern == NULL || pat_length == NULL)
     {
@@ -531,6 +537,7 @@ int main(int argc, char *argv[])
     }
     free(pat_type); // Libera la memoria della struttura ausiliaria.
 
+#ifdef DEBUG
     printf("\n--- CUDA DEBUG ---\n");
     if (pat_number > 0)
     {
@@ -541,6 +548,7 @@ int main(int argc, char *argv[])
         printf("CUDA_DEBUG: Pattern 1[0] = %c\n", pattern[1][0]);
     }
     printf("--- END PATTERN DEBUG ---\n");
+#endif // DEBUG
 
     /* Azzera gli argomenti per non usarli più (buona pratica richiesta dal problema). */
     argc = 0;
@@ -556,8 +564,8 @@ int main(int argc, char *argv[])
     pat_samp_mix = '0';
 
     /* 2.3. Alloca memoria sulla CPU per gli array che conterranno i risultati. */
-    unsigned long *pat_found;
-    pat_found = (unsigned long *)malloc(sizeof(unsigned long) * pat_number);
+    uint64_t *pat_found;
+    pat_found = (uint64_t *)malloc(sizeof(uint64_t) * pat_number);
     if (pat_found == NULL)
     {
         fprintf(stderr, "\n-- Error allocating aux pattern structure for size: %d\n", pat_number);
@@ -589,8 +597,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    //random = rng_new(seed);
-    //generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
+    // random = rng_new(seed);
+    // generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
 
     /* Lancia il kernel CUDA per generare la sequenza sulla GPU. */
     rng_t random_seq = rng_new(seed);
@@ -599,24 +607,24 @@ int main(int argc, char *argv[])
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_random, sizeof(rng_t)));
     CUDA_CHECK_FUNCTION(cudaMemcpy(d_random, &random_seq, sizeof(rng_t), cudaMemcpyHostToDevice));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length)); // Alloca memoria sulla GPU per la sequenza.
-    unsigned long threads_per_block = 256;
-    unsigned long grid_size = (seq_length + threads_per_block - 1) / threads_per_block;
+    uint64_t threads_per_block = 256;
+    uint64_t grid_size = (seq_length + threads_per_block - 1) / threads_per_block;
     generate_rng_sequence_kernel<<<grid_size, threads_per_block>>>(d_random, prob_G, prob_C, prob_A, d_sequence, seq_length);
     CUDA_CHECK_KERNEL(); // Controlla errori dopo il lancio
     CUDA_CHECK_FUNCTION(cudaMemcpy(&random_seq, d_random, sizeof(rng_t), cudaMemcpyDeviceToHost));
-    CUDA_CHECK_FUNCTION(cudaFree(d_random)); // Libera la memoria allocata per il generatore di numeri casuali sulla GPU.
+    CUDA_CHECK_FUNCTION(cudaFree(d_random));                                                                    // Libera la memoria allocata per il generatore di numeri casuali sulla GPU.
     CUDA_CHECK_FUNCTION(cudaMemcpy(sequence_h, d_sequence, sizeof(char) * seq_length, cudaMemcpyDeviceToHost)); // Copia la sequenza generata dalla GPU alla CPU.
-    //FILE* f = fopen("sequence_cuda.txt", "w");
-    //fwrite(sequence_h, sizeof(char), seq_length, f);
-    //fclose(f);
-    //sequence_h[seq_length - 1] = '\0';
-    //printf("Generated sequence: %s\n", sequence_h); // Stampa la sequenza generata.
+    // FILE* f = fopen("sequence_cuda.txt", "w");
+    // fwrite(sequence_h, sizeof(char), seq_length, f);
+    // fclose(f);
+    // sequence_h[seq_length - 1] = '\0';
+    // printf("Generated sequence: %s\n", sequence_h); // Stampa la sequenza generata.
 
 #ifdef DEBUG
     /* DEBUG: Stampa la sequenza e i pattern generati, se in modalità DEBUG. */
     printf("-----------------\n");
     printf("Sequence: ");
-    for (unsigned long lind = 0; lind < seq_length; lind++)
+    for (uint64_t lind = 0; lind < seq_length; lind++)
         printf("%c", sequence[lind]);
     printf("\n-----------------\n");
     printf("Patterns: %d\n", pat_number);
@@ -624,7 +632,7 @@ int main(int argc, char *argv[])
     for (debug_pat = 0; debug_pat < pat_number; debug_pat++)
     {
         printf("Pat[%d]: ", debug_pat);
-        for (unsigned long lind = 0; lind < pat_length[debug_pat]; lind++)
+        for (uint64_t lind = 0; lind < pat_length[debug_pat]; lind++)
             printf("%c", pattern[debug_pat][lind]);
         printf("\n");
     }
@@ -632,22 +640,22 @@ int main(int argc, char *argv[])
 #endif // DEBUG
 
     /* Dichiarazione dei puntatori per la memoria della GPU (Device). */
-    //char *d_sequence;
-    unsigned long *d_pat_length;
+    // char *d_sequence;
+    uint64_t *d_pat_length;
     char **d_pattern;
-    unsigned long *d_pat_found;
+    uint64_t *d_pat_found;
     int *d_seq_matches;
 
     /* Allocazione della memoria sulla GPU per tutti gli array necessari. */
-    //CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length));
-    CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_length, sizeof(unsigned long) * pat_number));
+    // CUDA_CHECK_FUNCTION(cudaMalloc(&d_sequence, sizeof(char) * seq_length));
+    CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_length, sizeof(uint64_t) * pat_number));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_pattern, sizeof(char *) * pat_number));
-    CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_found, sizeof(unsigned long) * pat_number));
+    CUDA_CHECK_FUNCTION(cudaMalloc(&d_pat_found, sizeof(uint64_t) * pat_number));
     CUDA_CHECK_FUNCTION(cudaMalloc(&d_seq_matches, sizeof(int) * seq_length));
 
     /* Trasferimento dei dati di input dalla CPU (Host) alla GPU (Device). */
-    //CUDA_CHECK_FUNCTION(cudaMemcpy(d_sequence, sequence, sizeof(char) * seq_length, cudaMemcpyHostToDevice));
-    CUDA_CHECK_FUNCTION(cudaMemcpy(d_pat_length, pat_length, sizeof(unsigned long) * pat_number, cudaMemcpyHostToDevice));
+    // CUDA_CHECK_FUNCTION(cudaMemcpy(d_sequence, sequence, sizeof(char) * seq_length, cudaMemcpyHostToDevice));
+    CUDA_CHECK_FUNCTION(cudaMemcpy(d_pat_length, pat_length, sizeof(uint64_t) * pat_number, cudaMemcpyHostToDevice));
 
     /* Trasferimento dell'array di pattern (jagged array), che richiede una procedura a due passaggi. */
     // 1. Alloca un array temporaneo sulla CPU per contenere i puntatori della GPU.
@@ -669,7 +677,7 @@ int main(int argc, char *argv[])
     CUDA_CHECK_FUNCTION(cudaMemcpy(d_pattern, d_pattern_in_host, sizeof(char *) * pat_number, cudaMemcpyHostToDevice));
 
     /* Configurazione per il lancio dei kernel CUDA: numero di thread per blocco e numero di blocchi nella griglia. */
-    //int threads_per_block = 256;
+    // int threads_per_block = 256;
     int grid_size_pat = (pat_number + threads_per_block - 1) / threads_per_block;
     int grid_size_seq = (seq_length + threads_per_block - 1) / threads_per_block;
 
@@ -679,36 +687,36 @@ int main(int argc, char *argv[])
     initialize_arrays_kernel<<<grid_size_seq, threads_per_block>>>(d_pat_found, d_seq_matches, pat_number, seq_length);
     CUDA_CHECK_KERNEL(); // Controlla errori dopo il lancio
     // REMOVE
-    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
-    printf("initialize_arrays_kernel\n");
+    //CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    //printf("initialize_arrays_kernel\n");
 
     // 2. Lancia il kernel per trovare i pattern.
     find_patterns_kernel<<<grid_size_pat, threads_per_block>>>(d_sequence, seq_length, d_pattern, d_pat_length, pat_number, d_pat_found);
     CUDA_CHECK_KERNEL();
     // REMOVE
-    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
-    printf("find_patterns_kernel\n");
+    //CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    //printf("find_patterns_kernel\n");
 
     // 3. Lancia il kernel per aggiornare i contatori dei match.
     increment_matches_kernel<<<grid_size_pat, threads_per_block>>>(d_pat_found, d_pat_length, pat_number, d_seq_matches);
     CUDA_CHECK_KERNEL();
     // REMOVE
-    CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
-    printf("increment_matches_kernel\n");
+    //CUDA_CHECK_FUNCTION(cudaDeviceSynchronize()); // Sincronizza la GPU per assicurarsi che l'inizializzazione sia completata.
+    //printf("increment_matches_kernel\n");
 
     /* Trasferimento dei risultati dalla GPU (Device) alla CPU (Host) per il calcolo finale e la stampa. */
-    CUDA_CHECK_FUNCTION(cudaMemcpy(pat_found, d_pat_found, sizeof(unsigned long) * pat_number, cudaMemcpyDeviceToHost));
+    CUDA_CHECK_FUNCTION(cudaMemcpy(pat_found, d_pat_found, sizeof(uint64_t) * pat_number, cudaMemcpyDeviceToHost));
     CUDA_CHECK_FUNCTION(cudaMemcpy(seq_matches, d_seq_matches, sizeof(int) * seq_length, cudaMemcpyDeviceToHost));
 
     /* Calcoli finali sulla CPU basati sui risultati ottenuti dalla GPU. */
     int pat_matches = 0;
-    unsigned long checksum_matches = 0;
-    unsigned long checksum_found = 0;
+    uint64_t checksum_matches = 0;
+    uint64_t checksum_found = 0;
 
     // Calcola il numero totale di pattern trovati e il checksum delle posizioni.
     for (ind = 0; ind < pat_number; ind++)
     {
-        if (pat_found[ind] != (unsigned long)NOT_FOUND)
+        if (pat_found[ind] != (uint64_t)NOT_FOUND)
         {
             pat_matches++;
             checksum_found = (checksum_found + pat_found[ind]) % CHECKSUM_MAX;
@@ -716,7 +724,7 @@ int main(int argc, char *argv[])
     }
 
     // Calcola il checksum dei contatori di copertura.
-    for (unsigned long lind = 0; lind < seq_length; lind++)
+    for (uint64_t lind = 0; lind < seq_length; lind++)
     {
         if (seq_matches[lind] != NOT_FOUND)
         {
@@ -735,7 +743,7 @@ int main(int argc, char *argv[])
     printf("\n");
     printf("-----------------\n");
     printf("Matches:");
-    for (unsigned long lind = 0; lind < seq_length; lind++)
+    for (uint64_t lind = 0; lind < seq_length; lind++)
         printf(" %d", seq_matches[lind]);
     printf("\n");
     printf("-----------------\n");
