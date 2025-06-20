@@ -28,7 +28,8 @@
 /*
  * Utils: Function to get wall time
  */
-double cp_Wtime() {
+double cp_Wtime()
+{
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec + 1.0e-6 * tv.tv_usec;
@@ -49,9 +50,11 @@ double cp_Wtime() {
  * Function: Increment the number of pattern matches on the sequence positions
  * 	This function can be changed and/or optimized by the students
  */
-void increment_matches(int pat, unsigned long *pat_found, unsigned long *pat_length, int *seq_matches) {
+void increment_matches(int pat, unsigned long *pat_found, unsigned long *pat_length, int *seq_matches)
+{
     unsigned long ind;
-    for (ind = 0; ind < pat_length[pat]; ind++) {
+    for (ind = 0; ind < pat_length[pat]; ind++)
+    {
         if (seq_matches[pat_found[pat] + ind] == NOT_FOUND)
             seq_matches[pat_found[pat] + ind] = 0;
         else
@@ -62,9 +65,11 @@ void increment_matches(int pat, unsigned long *pat_found, unsigned long *pat_len
 /*
  * Function: Fill random sequence or pattern
  */
-void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, unsigned long length) {
+void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, unsigned long length)
+{
     unsigned long ind;
-    for (ind = 0; ind < length; ind++) {
+    for (ind = 0; ind < length; ind++)
+    {
         double prob = rng_next(random);
         if (prob < prob_G)
             seq[ind] = 'G';
@@ -76,9 +81,11 @@ void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob
             seq[ind] = 'T';
     }
 }
-void generate_rng_sequence_mpi(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, unsigned long length) {
-    unsigned long ind;
-    for (ind = 0; ind < length; ind++) {
+void generate_rng_sequence_mpi(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, int length)
+{
+    int ind;
+    for (ind = 0; ind < length; ind++)
+    {
         double prob = rng_next(random);
         if (prob < prob_G)
             seq[ind] = 'G';
@@ -94,11 +101,14 @@ void generate_rng_sequence_mpi(rng_t *random, float prob_G, float prob_C, float 
 /*
  * Function: Copy a sample of the sequence
  */
-void copy_sample_sequence(rng_t *random, char *sequence, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length) {
+void copy_sample_sequence(rng_t *random, char *sequence, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length)
+{
     /* Choose location */
     unsigned long location = (unsigned long)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
-    if (location > seq_length - length) location = seq_length - length;
-    if (location <= 0) location = 0;
+    if (location > seq_length - length)
+        location = seq_length - length;
+    if (location <= 0)
+        location = 0;
 
     /* Copy sample */
     unsigned long ind;
@@ -115,16 +125,20 @@ void copy_sample_sequence(rng_t *random, char *sequence, unsigned long seq_lengt
 /*
  * Function: Allocate new patttern
  */
-char *pattern_allocate(rng_t *random, unsigned long pat_rng_length_mean, unsigned long pat_rng_length_dev, unsigned long seq_length, unsigned long *new_length) {
+char *pattern_allocate(rng_t *random, unsigned long pat_rng_length_mean, unsigned long pat_rng_length_dev, unsigned long seq_length, unsigned long *new_length)
+{
 
     /* Random length */
     unsigned long length = (unsigned long)rng_next_normal(random, (double)pat_rng_length_mean, (double)pat_rng_length_dev);
-    if (length > seq_length) length = seq_length;
-    if (length <= 0) length = 1;
+    if (length > seq_length)
+        length = seq_length;
+    if (length <= 0)
+        length = 1;
 
     /* Allocate pattern */
     char *pattern = (char *)malloc(sizeof(char) * length);
-    if (pattern == NULL) {
+    if (pattern == NULL)
+    {
         fprintf(stderr, "\n-- Error allocating a pattern of size: %lu\n", length);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
@@ -137,11 +151,14 @@ char *pattern_allocate(rng_t *random, unsigned long pat_rng_length_mean, unsigne
 /*
  * Function: Regenerate a sample of the sequence
  */
-void generate_sample_sequence(rng_t *random, rng_t random_seq, float prob_G, float prob_C, float prob_A, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length) {
+void generate_sample_sequence(rng_t *random, rng_t random_seq, float prob_G, float prob_C, float prob_A, unsigned long seq_length, unsigned long pat_samp_loc_mean, unsigned long pat_samp_loc_dev, char *pattern, unsigned long length)
+{
     /* Choose location */
     unsigned long location = (unsigned long)rng_next_normal(random, (double)pat_samp_loc_mean, (double)pat_samp_loc_dev);
-    if (location > seq_length - length) location = seq_length - length;
-    if (location <= 0) location = 0;
+    if (location > seq_length - length)
+        location = seq_length - length;
+    if (location <= 0)
+        location = 0;
 
     /* Regenerate sample */
     rng_t local_random = random_seq;
@@ -152,7 +169,8 @@ void generate_sample_sequence(rng_t *random, rng_t random_seq, float prob_G, flo
 /*
  * Function: Print usage line in stderr
  */
-void show_usage(char *program_name) {
+void show_usage(char *program_name)
+{
     fprintf(stderr, "Usage: %s ", program_name);
     fprintf(stderr, "<seq_length> <prob_G> <prob_C> <prob_A> <pat_rng_num> <pat_rng_length_mean> <pat_rng_length_dev> <pat_samples_num> <pat_samp_length_mean> <pat_samp_length_dev> <pat_samp_loc_mean> <pat_samp_loc_dev> <pat_samp_mix:B[efore]|A[fter]|M[ixed]> <long_seed>\n");
     fprintf(stderr, "\n");
@@ -161,20 +179,26 @@ void show_usage(char *program_name) {
 /*
  * MAIN PROGRAM
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     /* 0. Default output and error without buffering, forces to write immediately */
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
     /* 1. Read scenary arguments */
     /* 1.0. Init MPI before processing arguments */
+    printf("MPI_Init\n");
     MPI_Init(&argc, &argv);
     int rank, nprocs;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (rank == 0)
+        printf("START\n");
+
     /* 1.1. Check minimum number of arguments */
-    if (argc < 15) {
+    if (argc < 15)
+    {
         fprintf(stderr, "\n-- Error: Not enough arguments when reading configuration from the command line\n\n");
         show_usage(argv[0]);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
@@ -185,11 +209,14 @@ int main(int argc, char *argv[]) {
     float prob_G = atof(argv[2]);
     float prob_C = atof(argv[3]);
     float prob_A = atof(argv[4]);
-    if (prob_G + prob_C + prob_A > 1) {
+    if (prob_G + prob_C + prob_A > 1)
+    {
         fprintf(stderr, "\n-- Error: The sum of G,C,A,T nucleotid probabilities cannot be higher than 1\n\n");
         show_usage(argv[0]);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
+
+    double timer = cp_Wtime();
     prob_C += prob_G;
     prob_A += prob_C;
 
@@ -204,7 +231,8 @@ int main(int argc, char *argv[]) {
     unsigned long pat_samp_loc_dev = atol(argv[12]);
 
     char pat_samp_mix = argv[13][0];
-    if (pat_samp_mix != 'B' && pat_samp_mix != 'A' && pat_samp_mix != 'M') {
+    if (pat_samp_mix != 'B' && pat_samp_mix != 'A' && pat_samp_mix != 'M')
+    {
         fprintf(stderr, "\n-- Error: Incorrect first character of pat_samp_mix: %c\n\n", pat_samp_mix);
         show_usage(argv[0]);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
@@ -214,7 +242,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef DEBUG
     /* DEBUG: Print arguments */
-    if (rank == 0) {
+    if (rank == 0)
+    {
         printf("\nArguments: seq_length=%lu\n", seq_length);
         printf("Arguments: Accumulated probabilitiy G=%f, C=%f, A=%f, T=1\n", prob_G, prob_C, prob_A);
         printf("Arguments: Random patterns number=%d, length_mean=%lu, length_dev=%lu\n", pat_rng_num, pat_rng_length_mean, pat_rng_length_dev);
@@ -234,7 +263,8 @@ int main(int argc, char *argv[]) {
     int pat_number = pat_rng_num + pat_samp_num;
     unsigned long *pat_length = (unsigned long *)malloc(sizeof(unsigned long) * pat_number);
     char **pattern = (char **)malloc(sizeof(char *) * pat_number);
-    if (pattern == NULL || pat_length == NULL) {
+    if (pattern == NULL || pat_length == NULL)
+    {
         fprintf(stderr, "\n-- Error allocating the basic patterns structures for size: %d\n", pat_number);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
@@ -246,7 +276,8 @@ int main(int argc, char *argv[]) {
 #define PAT_TYPE_RNG 1
 #define PAT_TYPE_SAMP 2
     char *pat_type = (char *)malloc(sizeof(char) * pat_number);
-    if (pat_type == NULL) {
+    if (pat_type == NULL)
+    {
         fprintf(stderr, "\n-- Error allocating ancillary structure for pattern of size: %d\n", pat_number);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
@@ -254,7 +285,8 @@ int main(int argc, char *argv[]) {
         pat_type[ind] = PAT_TYPE_NONE;
 
     /* 2.2.3 Fill up pattern types using the chosen mode */
-    switch (pat_samp_mix) {
+    switch (pat_samp_mix)
+    {
     case 'A':
         for (ind = 0; ind < pat_rng_num; ind++)
             pat_type[ind] = PAT_TYPE_RNG;
@@ -268,20 +300,27 @@ int main(int argc, char *argv[]) {
             pat_type[ind] = PAT_TYPE_RNG;
         break;
     default:
-        if (pat_rng_num == 0) {
+        if (pat_rng_num == 0)
+        {
             for (ind = 0; ind < pat_number; ind++)
                 pat_type[ind] = PAT_TYPE_SAMP;
-        } else if (pat_samp_num == 0) {
+        }
+        else if (pat_samp_num == 0)
+        {
             for (ind = 0; ind < pat_number; ind++)
                 pat_type[ind] = PAT_TYPE_RNG;
-        } else if (pat_rng_num < pat_samp_num) {
+        }
+        else if (pat_rng_num < pat_samp_num)
+        {
             int interval = pat_number / pat_rng_num;
             for (ind = 0; ind < pat_number; ind++)
                 if ((ind + 1) % interval == 0)
                     pat_type[ind] = PAT_TYPE_RNG;
                 else
                     pat_type[ind] = PAT_TYPE_SAMP;
-        } else {
+        }
+        else
+        {
             int interval = pat_number / pat_samp_num;
             for (ind = 0; ind < pat_number; ind++)
                 if ((ind + 1) % interval == 0)
@@ -292,11 +331,15 @@ int main(int argc, char *argv[]) {
     }
 
     /* 2.2.4 Generate the patterns */
-    for (ind = 0; ind < pat_number; ind++) {
-        if (pat_type[ind] == PAT_TYPE_RNG) {
+    for (ind = 0; ind < pat_number; ind++)
+    {
+        if (pat_type[ind] == PAT_TYPE_RNG)
+        {
             pattern[ind] = pattern_allocate(&random, pat_rng_length_mean, pat_rng_length_dev, seq_length, &pat_length[ind]);
             generate_rng_sequence(&random, prob_G, prob_C, prob_A, pattern[ind], pat_length[ind]);
-        } else if (pat_type[ind] == PAT_TYPE_SAMP) {
+        }
+        else if (pat_type[ind] == PAT_TYPE_SAMP)
+        {
             pattern[ind] = pattern_allocate(&random, pat_samp_length_mean, pat_samp_length_dev, seq_length, &pat_length[ind]);
 #define REGENERATE_SAMPLE_PATTERNS
 #ifdef REGENERATE_SAMPLE_PATTERNS
@@ -305,7 +348,9 @@ int main(int argc, char *argv[]) {
 #else
             copy_sample_sequence(&random, sequence, seq_length, pat_samp_loc_mean, pat_samp_loc_dev, pattern[ind], pat_length[ind]);
 #endif
-        } else {
+        }
+        else
+        {
             fprintf(stderr, "\n-- Error internal: Paranoic check! A pattern without type at position %d\n", ind);
             MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
@@ -333,13 +378,17 @@ int main(int argc, char *argv[]) {
     /* 2.3.1. Other results related to patterns */
     unsigned long *pat_found;
     pat_found = (unsigned long *)malloc(sizeof(unsigned long) * pat_number);
-    if (pat_found == NULL) {
+    if (pat_found == NULL)
+    {
         fprintf(stderr, "\n-- Error allocating aux pattern structure for size: %d\n", pat_number);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
     /* 3. Start global timer */
     MPI_Barrier(MPI_COMM_WORLD);
+    timer = cp_Wtime() - timer;
+    if (rank == 0)
+        printf("Initialization time: %lf\n", timer);
     double ttotal = cp_Wtime();
 
     /*
@@ -347,7 +396,10 @@ int main(int argc, char *argv[]) {
      * START HERE: DO NOT CHANGE THE CODE ABOVE THIS POINT
      *
      */
+    if (rank == 0)
+        printf("START HERE\n");
     /* 2.1. Allocate and fill sequence */
+    /*void* baseptr = NULL;
     char *sequence = NULL;
 
     MPI_Comm shmcomm;
@@ -356,49 +408,64 @@ int main(int argc, char *argv[]) {
     int shrm_rank;//, shm_nprocs;
     MPI_Comm_rank(shmcomm, &shrm_rank);
 
-    int size = (shrm_rank == 0) ? sizeof(char) * seq_length : 0;
+    MPI_Aint size = (shrm_rank == 0) ? sizeof(char) * seq_length : 0;
 
     MPI_Win shmwin;
-    MPI_Win_allocate_shared(size, sizeof(char), MPI_INFO_NULL, shmcomm, &sequence, &shmwin);
-
-    if (sequence == NULL) {
-        fprintf(stderr, "\n-- Error allocating the sequence for size: %lu\n", seq_length);
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
+    MPI_Win_allocate_shared(size, sizeof(char), MPI_INFO_NULL, shmcomm, &baseptr, &shmwin);
 
     MPI_Aint sizeB;
     int disp_unit;
-    MPI_Win_shared_query(shmwin, 0, &sizeB, &disp_unit, &sequence);
+    MPI_Win_shared_query(shmwin, 0, &sizeB, &disp_unit, &baseptr);
+
+    sequence = (char *)baseptr;
+
+    if (sequence == NULL) {
+        fprintf(stderr, "\n-- Error allocating the sequence of size: %lu\n", seq_length);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
 
     MPI_Win_sync(shmwin);
-    MPI_Barrier(shmcomm);
+    MPI_Barrier(shmcomm);*/
 
-    // char *sequence = (char *)malloc(sizeof(char) * seq_length);
-    /*if (sequence == NULL) {
-        fprintf(stderr, "\n-- Error allocating the sequence for size: %lu\n", seq_length);
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }*/
+    if (rank == 0)
+        printf("rng_new\n");
     random = rng_new(seed);
+    if (rank == 0)
+        printf("malloc sequence\n");
+    char *sequence = (char *)malloc(sizeof(char) * seq_length);
+    if (rank == 0)
+        printf("Allocated sequence of size: %lu\n", seq_length);
     // generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
 
-    unsigned long n_per_proc = seq_length / nprocs;
-    unsigned long remainder = seq_length % nprocs;
+    int n_per_proc = seq_length / nprocs;
+    int remainder = seq_length % nprocs;
 
-    int *recvcounts = (int *)malloc(sizeof(int) * nprocs); // Quanti elementi ricevere da ogni processo
-    int *displs = (int *)malloc(sizeof(int) * nprocs);     // A quale offset posizionare i dati ricevuti
+    int *recvcounts = malloc(sizeof(int64_t) * nprocs); // Quanti elementi ricevere da ogni processo
+    int *displs = malloc(sizeof(int64_t) * nprocs);     // A quale offset posizionare i dati ricevuti
+    if (rank == 0)
+        printf("n_per_proc: %d, remainder: %d\n", n_per_proc, remainder);
 
-    for (int i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++)
+    {
         recvcounts[i] = n_per_proc + (i < remainder ? 1 : 0);
         displs[i] = (i > 0) ? (displs[i - 1] + recvcounts[i - 1]) : 0;
     }
+    if (rank == 0)
+        printf("Dopo for\n");
 
     rng_skip(&random, rank * n_per_proc + (rank < remainder ? rank : remainder));
+    if (rank == 0)
+        printf("length: %d\n", recvcounts[rank]);
     generate_rng_sequence_mpi(&random, prob_G, prob_C, prob_A, sequence + displs[rank], recvcounts[rank]);
+    if (rank == 0)
+        printf("Generated rng_sequence\n");
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* 2.1.1. Gather the sequence in all processes */
-    //MPI_Allgatherv(sequence + displs[rank], recvcounts[rank], MPI_CHAR, sequence, recvcounts, displs, MPI_CHAR, MPI_COMM_WORLD);
+    MPI_Allgatherv(sequence + displs[rank], recvcounts[rank], MPI_CHAR, sequence, recvcounts, displs, MPI_CHAR, MPI_COMM_WORLD);
+    if (rank == 0)
+        printf("Gathered sequence in all processes\n");
 
 #ifdef DEBUG
     /* DEBUG: Print sequence and patterns */
@@ -409,7 +476,8 @@ int main(int argc, char *argv[]) {
     printf("\n-----------------\n");
     printf("Patterns: %d ( rng: %d, samples: %d )\n", pat_number, pat_rng_num, pat_samp_num);
     int debug_pat;
-    for (debug_pat = 0; debug_pat < pat_number; debug_pat++) {
+    for (debug_pat = 0; debug_pat < pat_number; debug_pat++)
+    {
         printf("Pat[%d]: ", debug_pat);
         for (lind = 0; lind < pat_length[debug_pat]; lind++)
             printf("%c", pattern[debug_pat][lind]);
@@ -421,16 +489,21 @@ int main(int argc, char *argv[]) {
     /* 2.3.2. Other results related to the main sequence */
     int *seq_matches;
     seq_matches = (int *)malloc(sizeof(int) * seq_length);
-    if (seq_matches == NULL) {
+    if (seq_matches == NULL)
+    {
         fprintf(stderr, "\n-- Error allocating aux sequence structures for size: %lu\n", seq_length);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    /* 4. Initialize ancillary structures */
-    for (ind = 0; ind < pat_number; ind++) {
+/* 4. Initialize ancillary structures */
+#pragma omp parallel for private(ind)
+    for (ind = 0; ind < pat_number; ind++)
+    {
         pat_found[ind] = (unsigned long)NOT_FOUND;
     }
-    for (lind = 0; lind < seq_length; lind++) {
+#pragma omp parallel for private(lind)
+    for (lind = 0; lind < seq_length; lind++)
+    {
         seq_matches[lind] = NOT_FOUND;
     }
 
@@ -438,16 +511,21 @@ int main(int argc, char *argv[]) {
     unsigned long start;
     int pat;
 #pragma omp parallel for private(start, lind) reduction(+ : pat_matches) schedule(dynamic)
-    for (pat = 0; pat < pat_number; pat++) {
+    for (pat = 0; pat < pat_number; pat++)
+    {
         /* 5.1. For each posible starting position */
-        for (start = 0; start <= seq_length - pat_length[pat]; start++) {
+        for (start = 0; start <= seq_length - pat_length[pat]; start++)
+        {
             /* 5.1.1. For each pattern element */
-            for (lind = 0; lind < pat_length[pat]; lind++) {
+            for (lind = 0; lind < pat_length[pat]; lind++)
+            {
                 /* Stop this test when different nucleotids are found */
-                if (sequence[start + lind] != pattern[pat][lind]) break;
+                if (sequence[start + lind] != pattern[pat][lind])
+                    break;
             }
             /* 5.1.2. Check if the loop ended with a match */
-            if (lind == pat_length[pat]) {
+            if (lind == pat_length[pat])
+            {
                 pat_matches++;
                 pat_found[pat] = start;
                 break;
@@ -455,7 +533,8 @@ int main(int argc, char *argv[]) {
         }
 
         /* 5.2. Pattern found */
-        if (pat_found[pat] != (unsigned long)NOT_FOUND) {
+        if (pat_found[pat] != (unsigned long)NOT_FOUND)
+        {
 /* 4.2.1. Increment the number of pattern matches on the sequence positions */
 #pragma omp critical
             increment_matches(pat, pat_found, pat_length, seq_matches);
@@ -465,11 +544,13 @@ int main(int argc, char *argv[]) {
     /* 7. Check sums */
     unsigned long checksum_matches = 0;
     unsigned long checksum_found = 0;
-    for (ind = 0; ind < pat_number; ind++) {
+    for (ind = 0; ind < pat_number; ind++)
+    {
         if (pat_found[ind] != (unsigned long)NOT_FOUND)
             checksum_found = (checksum_found + pat_found[ind]) % CHECKSUM_MAX;
     }
-    for (lind = 0; lind < seq_length; lind++) {
+    for (lind = 0; lind < seq_length; lind++)
+    {
         if (seq_matches[lind] != NOT_FOUND)
             checksum_matches = (checksum_matches + seq_matches[lind]) % CHECKSUM_MAX;
     }
@@ -478,7 +559,8 @@ int main(int argc, char *argv[]) {
     /* DEBUG: Write results */
     printf("-----------------\n");
     printf("Found start:");
-    for (debug_pat = 0; debug_pat < pat_number; debug_pat++) {
+    for (debug_pat = 0; debug_pat < pat_number; debug_pat++)
+    {
         printf(" %lu", pat_found[debug_pat]);
     }
     printf("\n");
@@ -491,7 +573,7 @@ int main(int argc, char *argv[]) {
 #endif // DEBUG
 
     /* Free local resources */
-    //free(sequence);
+    // free(sequence);
     free(seq_matches);
 
     /*
@@ -505,7 +587,8 @@ int main(int argc, char *argv[]) {
     ttotal = cp_Wtime() - ttotal;
 
     /* 9. Output for leaderboard */
-    if (rank == 0) {
+    if (rank == 0)
+    {
         printf("\n");
         /* 9.1. Total computation time */
         printf("Time: %lf\n", ttotal);
