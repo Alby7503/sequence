@@ -5,3 +5,4 @@ align_mpi_omp
 sequence_cuda.txt
 sequence_seq.txt
 .vscode/settings.json
+align_mpi_omp_2

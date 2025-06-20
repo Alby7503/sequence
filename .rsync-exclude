@@ -6,6 +6,7 @@ align_seq_new
 align_mpi
 align_omp
 align_mpi_omp
+align_mpi_omp_2
 align_cuda
 align_seq.txt
 LICENSE

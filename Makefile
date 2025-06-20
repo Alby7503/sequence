@@ -27,7 +27,7 @@ GPU_ARCH := $(shell \
 CUDAFLAGS += -arch=$(GPU_ARCH)
 
 # Targets to build
-OBJS = align_seq align_omp align_mpi align_cuda align_mpi_omp align_seq_new
+OBJS = align_seq align_omp align_mpi align_cuda align_mpi_omp align_seq_new align_mpi_omp_2
 
 # Rules. By default show help
 help:
@@ -66,6 +66,9 @@ align_mpi_omp: align_mpi_omp.c rng.c
 align_cuda: align_cuda.cu rng.c
 	@echo "Compiling CUDA version with architecture $(GPU_ARCH)..."
 	$(CUDACC) $(CUDAFLAGS) $(DEBUG) $< $(LIBS) -o $@
+
+align_mpi_omp_2: align_mpi_omp_2.c rng.c
+	$(MPICC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
 
 # Remove the target files
 clean:
