@@ -404,8 +404,8 @@ int main(int argc, char *argv[]) {
 
     random = rng_new(seed);
 
-    int n_per_proc = seq_length / nprocs;
-    int remainder = seq_length % nprocs;
+    int64_t n_per_proc = seq_length / nprocs;
+    int64_t remainder = seq_length % nprocs;
 
     int64_t *recvcounts = malloc(sizeof(int64_t) * nprocs); // Quanti elementi ricevere da ogni processo
     if (recvcounts == NULL) {
@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    for (int i = 0; i < nprocs; i++) {
+    for (int64_t i = 0; i < nprocs; i++) {
         recvcounts[i] = n_per_proc + (i < remainder ? 1 : 0);
         displs[i] = (i > 0) ? (displs[i - 1] + recvcounts[i - 1]) : 0;
     }
@@ -472,11 +472,11 @@ int main(int argc, char *argv[]) {
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    int pattern_per_rank = pat_number / nprocs;
-    int pattern_remainder = pat_number % nprocs;
+    int64_t pattern_per_rank = pat_number / nprocs;
+    int64_t pattern_remainder = pat_number % nprocs;
 
-    int pattern_start = rank * pattern_per_rank + (rank < pattern_remainder ? rank : pattern_remainder);
-    int pattern_end = pattern_start + pattern_per_rank + (rank < pattern_remainder ? 1 : 0);
+    int64_t pattern_start = rank * pattern_per_rank + (rank < pattern_remainder ? rank : pattern_remainder);
+    int64_t pattern_end = pattern_start + pattern_per_rank + (rank < pattern_remainder ? 1 : 0);
 
 /* 4. Initialize ancillary structures */
 #pragma omp parallel for private(ind)
@@ -491,12 +491,9 @@ int main(int argc, char *argv[]) {
 
     /* 5. Search for each pattern */
     unsigned long start;
-    int pat;
 
-    int PIETROCOUNTER = 0;
 #pragma omp parallel for private(start, lind) reduction(+ : pat_matches) schedule(dynamic)
-    for (pat = pattern_start; pat < pattern_end; pat++) {
-        PIETROCOUNTER++;
+    for (int64_t pat = pattern_start; pat < pattern_end; pat++) {
         /* 5.1. For each posible starting position */
         for (start = 0; start <= seq_length - pat_length[pat]; start++) {
             /* 5.1.1. For each pattern element */

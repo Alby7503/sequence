@@ -65,10 +65,10 @@ align_mpi_omp: align_mpi_omp.c rng.c
 
 align_cuda: align_cuda.cu rng.c
 	@echo "Compiling CUDA version with architecture $(GPU_ARCH)..."
-	$(CUDACC) $(CUDAFLAGS) $(DEBUG) $< $(LIBS) -o $@
+	$(CUDACC) $(CUDAFLAGS) $< $(LIBS) -o $@
 
 align_mpi_omp_2: align_mpi_omp_2.c rng.c
-	$(MPICC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
+	$(MPICC) $(FLAGS) $(OMPFLAG) $< $(LIBS) -o $@
 
 # Remove the target files
 clean:

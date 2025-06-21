@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export OMP_NUM_THREADS=4  # Imposta il numero di thread OpenMP per processo
+export OMP_NUM_THREADS=64  # Imposta il numero di thread OpenMP per processo
 
 make align_mpi_omp_2
 
@@ -8,8 +8,9 @@ make align_mpi_omp_2
 run_test() {
     echo "Running test with arguments: $*"
 
-    par_output=$(mpirun ./align_mpi_omp_2 "$@" | tee /dev/tty)
-    #par_output=$(mpirun -np 4 ./align_mpi_omp_2 "$@" | tee /dev/tty)
+    #par_output=$(mpirun ./align_mpi_omp_2 "$@" | tee /dev/tty)
+    #par_output=$(mpirun -np 2 --bind-to numa ./align_mpi_omp_2 "$@" | tee /dev/tty)
+    par_output=$(mpirun -np 2 --map-by socket --bind-to socket ./align_mpi_omp_2 "$@" | tee /dev/tty)
 
     echo "------------------------------------------------------------"
 }
