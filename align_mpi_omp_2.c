@@ -51,6 +51,7 @@ double cp_Wtime() {
  */
 void increment_matches(int pat, unsigned long *pat_found, unsigned long *pat_length, int *seq_matches) {
     for (unsigned long ind = 0; ind < pat_length[pat]; ind++) {
+#pragma omp atomic update
         seq_matches[pat_found[pat] + ind]++;
     }
 }
@@ -383,7 +384,7 @@ int main(int argc, char *argv[]) {
 
     MPI_Aint size = (shrm_rank == 0) ? sizeof(char) * seq_length : 0;
 
-    MPI_Win matches_shwin;
+    // MPI_Win matches_shwin;
     MPI_Win sequence_shmwin;
     // MPI_Win
     MPI_Win_allocate_shared(size, sizeof(char), MPI_INFO_NULL, shmcomm, &baseptr, &sequence_shmwin);
@@ -448,24 +449,25 @@ int main(int argc, char *argv[]) {
 #endif // DEBUG
 
     /* 2.3.2. Other results related to the main sequence */
-    int *seq_matches;
-    baseptr = NULL;
+    // int *seq_matches;
+    // baseptr = NULL;
 
-    size = (shrm_rank == 0) ? sizeof(int) * seq_length : 0;
+    // size = (shrm_rank == 0) ? sizeof(int) * seq_length : 0;
 
-    MPI_Win_allocate_shared(
+    /*MPI_Win_allocate_shared(
         size,          // Size of the sequence matches array
         sizeof(int),   // Size of each element in the array
         MPI_INFO_NULL, // No special info for the window
         shmcomm,       // Shared memory communicator
         &baseptr,      // Pointer to the base address of the window
         &matches_shwin // Window object
-    );
+    );*/
 
-    MPI_Win_shared_query(matches_shwin, 0, &sizeB, &disp_unit, &baseptr);
+    // MPI_Win_shared_query(matches_shwin, 0, &sizeB, &disp_unit, &baseptr);
 
-    seq_matches = (int *)baseptr;
-    // seq_matches = (int *)malloc(sizeof(int) * seq_length);
+    // seq_matches = (int *)baseptr;
+    //  seq_matches = (int *)malloc(sizeof(int) * seq_length);
+    int *seq_matches = (int *)calloc(seq_length, sizeof(int));
 
     if (seq_matches == NULL) {
         fprintf(stderr, "\n-- Error allocating aux sequence structures for size: %lu\n", seq_length);
@@ -483,44 +485,49 @@ int main(int argc, char *argv[]) {
     for (ind = pattern_start; ind < pattern_end; ind++) {
         pat_found[ind] = NOT_FOUND;
     }
-#pragma omp parallel for private(lind)
-    for (lind = displs[rank]; lind < displs[rank] + recvcounts[rank]; lind++) {
-        seq_matches[lind] = NOT_FOUND;
-    }
+    /*#pragma omp parallel for private(lind)
+        for (lind = displs[rank]; lind < displs[rank] + recvcounts[rank]; lind++) {
+            seq_matches[lind] = NOT_FOUND;
+        }*/
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* 5. Search for each pattern */
     unsigned long start;
 
-#pragma omp parallel for private(start, lind) reduction(+ : pat_matches) schedule(dynamic)
+// #pragma omp parallel for private(start, lind) reduction(+ : pat_matches) schedule(dynamic)
+#pragma omp parallel for private(start) reduction(+ : pat_matches)
     for (int64_t pat = pattern_start; pat < pattern_end; pat++) {
+        const char *current_pattern = pattern[pat];
+        const unsigned int current_pat_length = pat_length[pat];
+        const unsigned long max_start = seq_length - current_pat_length;
         /* 5.1. For each posible starting position */
-        for (start = 0; start <= seq_length - pat_length[pat]; start++) {
-            /* 5.1.1. For each pattern element */
-            for (lind = 0; lind < pat_length[pat]; lind++) {
-                /* Stop this test when different nucleotids are found */
-                if (sequence[start + lind] != pattern[pat][lind])
-                    break;
-            }
-            /* 5.1.2. Check if the loop ended with a match */
-            if (lind == pat_length[pat]) {
+        for (start = 0; start <= max_start; start++) {
+            //     /* 5.1.1. For each pattern element */
+            //     for (lind = 0; lind < pat_length[pat]; lind++) {
+            //         /* Stop this test when different nucleotids are found */
+            //     if (sequence[start + lind] != pattern[pat][lind])
+            //         break;
+
+            if (memcmp(sequence + start, current_pattern, current_pat_length) == 0) {
                 pat_matches++;
                 pat_found[pat] = start;
-                break;
-            }
-        }
-
-        /* 5.2. Pattern found */
-        if (pat_found[pat] != NOT_FOUND) {
-/* 4.2.1. Increment the number of pattern matches on the sequence positions */
-#pragma omp critical
-            {
-                MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, matches_shwin);
                 increment_matches(pat, pat_found, pat_length, seq_matches);
-                MPI_Win_unlock(0, matches_shwin);
+                break; // Pattern trovato, passa al successivo
             }
         }
+        /* 5.1.2. Check if the loop ended with a match */
+        // if (lind == pat_length[pat]) {
+        //     pat_matches++;
+        //     pat_found[pat] = start;
+        //     break;
+        // }
     }
+
+    /* 5.2. Pattern found */
+    // if (pat_found[pat] != NOT_FOUND) {
+    //     /* 4.2.1. Increment the number of pattern matches on the sequence positions */
+    //     increment_matches(pat, pat_found, pat_length, seq_matches);
+    // }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -533,16 +540,35 @@ int main(int argc, char *argv[]) {
         if (pat_found[ind] != NOT_FOUND)
             checksum_found += pat_found[ind];
     }
-#pragma omp parallel for private(lind) reduction(+ : checksum_matches)
-    for (lind = displs[rank]; lind < displs[rank] + recvcounts[rank]; lind++) {
-        if (seq_matches[lind] != NOT_FOUND)
-            checksum_matches += seq_matches[lind];
+
+    int *total_seq_matches = NULL;
+    if (rank == 0) {
+        total_seq_matches = (int *)malloc(sizeof(int) * seq_length);
+        if (total_seq_matches == NULL) {
+            fprintf(stderr, "\n-- Error allocating total sequence matches array of size: %lu\n", seq_length);
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+    }
+    MPI_Reduce(seq_matches,       // Buffer to send (my local sequence matches)
+               total_seq_matches, // Buffer to receive (only on rank 0)
+               seq_length,        // Number of elements to reduce (the whole sequence)
+               MPI_INT,           // Data type
+               MPI_SUM,           // Reduction operation
+               0,                 // Rank of the process that receives
+               MPI_COMM_WORLD);
+
+    if (rank == 0) {
+#pragma omp parallel for reduction(+ : checksum_matches)
+        for (lind = 0; lind < seq_length; lind++) {
+            checksum_matches += total_seq_matches[lind];
+        }
     }
 
     /* 7.1. Reduce results */
     unsigned long total_pat_matches = 0;
     unsigned long total_checksum_found = 0;
-    unsigned long total_checksum_matches = 0;
+    // unsigned long total_checksum_matches = 0;
+
     MPI_Reduce(&pat_matches,       // Buffer to send (my local pattern matches)
                &total_pat_matches, // Buffer to receive (only on rank 0)
                1,                  // Number of elements to reduce (one only)
@@ -557,16 +583,16 @@ int main(int argc, char *argv[]) {
                MPI_SUM,               // Reduction operation
                0,                     // Rank of the process that receives
                MPI_COMM_WORLD);
-    MPI_Reduce(&checksum_matches,       // Buffer to send (my local checksum matches)
+    /*MPI_Reduce(&checksum_matches,       // Buffer to send (my local checksum matches)
                &total_checksum_matches, // Buffer to receive (only on rank 0)
                1,                       // Number of elements to reduce (one only)
                MPI_UNSIGNED_LONG,       // Data type
                MPI_SUM,                 // Reduction operation
                0,                       // Rank of the process that receives
-               MPI_COMM_WORLD);
+               MPI_COMM_WORLD);*/
     if (rank == 0) {
         total_checksum_found %= CHECKSUM_MAX;
-        total_checksum_matches %= CHECKSUM_MAX;
+        checksum_matches %= CHECKSUM_MAX;
     }
 
 #ifdef DEBUG
@@ -609,7 +635,7 @@ int main(int argc, char *argv[]) {
         printf("Result: %lu, %lu, %lu\n\n",
                total_pat_matches,
                total_checksum_found,
-               total_checksum_matches);
+               checksum_matches);
     }
 
     /* 10. Free resources */

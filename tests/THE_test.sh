@@ -1,0 +1,1 @@
+mpirun -np 2 --map-by socket --bind-to socket ./align_mpi_omp_2 42949673000 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224
