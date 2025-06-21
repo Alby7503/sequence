@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export OMP_NUM_THREADS=32  # Imposta il numero di thread OpenMP per processo
+export OMP_NUM_THREADS=4  # Imposta il numero di thread OpenMP per processo
 
 # Funzione per eseguire e confrontare un test
 run_test() {
@@ -9,7 +9,7 @@ run_test() {
     seq_output=$(./align_seq "$@" | tee /dev/tty)
 
     #par_output=$(mpirun ./align_mpi_omp_2 "$@" | tee /dev/tty)
-    par_output=$(mpirun -np 32 ./align_mpi_omp_2 "$@" | tee /dev/tty)
+    par_output=$(mpirun -np 4 ./align_mpi_omp_2 "$@" | tee /dev/tty)
 
     seq_result=$(echo "$seq_output" | grep "Result:" | awk -F'Result: ' '{print $2}')
     par_result=$(echo "$par_output" | grep "Result:" | awk -F'Result: ' '{print $2}')
