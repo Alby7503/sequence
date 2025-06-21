@@ -50,12 +50,8 @@ double cp_Wtime() {
  * 	This function can be changed and/or optimized by the students
  */
 void increment_matches(int pat, unsigned long *pat_found, unsigned long *pat_length, int *seq_matches) {
-    unsigned long ind;
-    for (ind = 0; ind < pat_length[pat]; ind++) {
-        if (seq_matches[pat_found[pat] + ind] == NOT_FOUND)
-            seq_matches[pat_found[pat] + ind] = 0;
-        else
-            seq_matches[pat_found[pat] + ind]++;
+    for (unsigned long ind = 0; ind < pat_length[pat]; ind++) {
+        seq_matches[pat_found[pat] + ind]++;
     }
 }
 
@@ -77,16 +73,27 @@ void generate_rng_sequence(rng_t *random, float prob_G, float prob_C, float prob
     }
 }
 void generate_rng_sequence_mpi(rng_t *random, float prob_G, float prob_C, float prob_A, char *seq, int64_t length) {
-    for (int64_t ind = 0; ind < length; ind++) {
-        double prob = rng_next(random);
-        if (prob < prob_G)
-            seq[ind] = 'G';
-        else if (prob < prob_C)
-            seq[ind] = 'C';
-        else if (prob < prob_A)
-            seq[ind] = 'A';
-        else
-            seq[ind] = 'T';
+    int64_t length_per_thread = length / omp_get_max_threads();
+#pragma omp parallel
+    {
+        rng_t local_random = *random;
+        rng_skip(&local_random, length_per_thread * omp_get_thread_num());
+
+        int tid = omp_get_thread_num();
+        int64_t start = length_per_thread * tid;
+        int64_t end = (tid == omp_get_max_threads() - 1) ? length : start + length_per_thread;
+
+        for (int64_t ind = start; ind < end; ind++) {
+            double prob = rng_next(&local_random);
+            if (prob < prob_G)
+                seq[ind] = 'G';
+            else if (prob < prob_C)
+                seq[ind] = 'C';
+            else if (prob < prob_A)
+                seq[ind] = 'A';
+            else
+                seq[ind] = 'T';
+        }
     }
 }
 
@@ -395,16 +402,7 @@ int main(int argc, char *argv[]) {
     MPI_Win_sync(sequence_shmwin);
     MPI_Barrier(shmcomm);
 
-    // if (rank == 0)
-    //     printf("Finita parte di memoria condivisa\n");
-
     random = rng_new(seed);
-    // if (rank == 0)
-    //        printf("malloc sequence\n");
-    // char *sequence = (char *)malloc(sizeof(char) * seq_length);
-    // if (rank == 0)
-    //    printf("Allocated sequence of size: %lu\n", seq_length);
-    // generate_rng_sequence(&random, prob_G, prob_C, prob_A, sequence, seq_length);
 
     int n_per_proc = seq_length / nprocs;
     int remainder = seq_length % nprocs;
@@ -419,35 +417,18 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "\n-- Error allocating displs for size: %d\n", nprocs);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
-    // if (rank == 0)
-    //     printf("Finito allocamento recvcounts e displs\n");
 
     for (int i = 0; i < nprocs; i++) {
         recvcounts[i] = n_per_proc + (i < remainder ? 1 : 0);
         displs[i] = (i > 0) ? (displs[i - 1] + recvcounts[i - 1]) : 0;
-        // printf("Rank %d: recvcounts[%d] = %ld, displs[%d] = %ld\n", rank, i, recvcounts[i], i, displs[i]);
     }
-    // if (rank == 0)
-    //        printf("Dopo for\n");
-    // print sequence address
-    // if (rank == 0)
-    //    printf("Sequence address: %p\n", (void *)sequence);
 
     rng_skip(&random, rank * n_per_proc + (rank < remainder ? rank : remainder));
-    // if (rank == 0)
-    //        printf("length: %d\n", recvcounts[rank]);
     generate_rng_sequence_mpi(&random, prob_G, prob_C, prob_A, sequence + displs[rank], recvcounts[rank]);
-
-    // if (rank == 0)
-    //        printf("Generated rng_sequence\n");
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* 2.1.1. Gather the sequence in all processes */
-    // MPI_Allgatherv(sequence + displs[rank], recvcounts[rank], MPI_CHAR, sequence, recvcounts, displs, MPI_CHAR, MPI_COMM_WORLD);
-    // if (rank == 0)
-    //     printf("Gathered sequence in all processes\n");
-
 #ifdef DEBUG
     /* DEBUG: Print sequence and patterns */
     printf("-----------------\n");
@@ -500,10 +481,9 @@ int main(int argc, char *argv[]) {
 /* 4. Initialize ancillary structures */
 #pragma omp parallel for private(ind)
     for (ind = pattern_start; ind < pattern_end; ind++) {
-        pat_found[ind] = (unsigned long)NOT_FOUND;
+        pat_found[ind] = NOT_FOUND;
     }
 #pragma omp parallel for private(lind)
-    // for (lind = 0; lind < seq_length; lind++) {
     for (lind = displs[rank]; lind < displs[rank] + recvcounts[rank]; lind++) {
         seq_matches[lind] = NOT_FOUND;
     }
@@ -534,7 +514,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* 5.2. Pattern found */
-        if (pat_found[pat] != (unsigned long)NOT_FOUND) {
+        if (pat_found[pat] != NOT_FOUND) {
 /* 4.2.1. Increment the number of pattern matches on the sequence positions */
 #pragma omp critical
             {
@@ -553,7 +533,7 @@ int main(int argc, char *argv[]) {
 
 #pragma omp parallel for private(ind) reduction(+ : checksum_found)
     for (ind = pattern_start; ind < pattern_end; ind++) {
-        if (pat_found[ind] != (unsigned long)NOT_FOUND)
+        if (pat_found[ind] != NOT_FOUND)
             checksum_found += pat_found[ind];
     }
 #pragma omp parallel for private(lind) reduction(+ : checksum_matches)

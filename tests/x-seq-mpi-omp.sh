@@ -2,6 +2,8 @@
 
 export OMP_NUM_THREADS=4  # Imposta il numero di thread OpenMP per processo
 
+make align_mpi_omp_2
+
 # Funzione per eseguire e confrontare un test
 run_test() {
     echo "Running test with arguments: $*"
