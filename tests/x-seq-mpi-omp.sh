@@ -8,7 +8,7 @@ make align_mpi_omp_2
 run_test() {
     echo "Running test with arguments: $*"
 
-    seq_output=$(./align_seq_new "$@" | tee /dev/tty)
+    seq_output=$(./align_cuda "$@" | tee /dev/tty)
 
     #par_output=$(mpirun ./align_mpi_omp_2 "$@" | tee /dev/tty)
     par_output=$(mpirun -np 2 --map-by socket --bind-to socket ./align_mpi_omp_2 "$@" | tee /dev/tty)

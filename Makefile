@@ -18,10 +18,10 @@ FLAGS = -O3 -Wall
 CUDAFLAGS = -O3 -Xcompiler -Wall
 
 # Auto-detect GPU architecture via nvidia-smi
-# Fallback to sm_60 if detection fails
+# Fallback to sm_80 if detection fails
 GPU_ARCH := $(shell \
   detect=$$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -n1 | tr -d "."); \
-  if [ -z "$$detect" ]; then echo sm_60; else echo sm_$$detect; fi)
+  if [ -z "$$detect" ]; then echo sm_80; else echo sm_$$detect; fi)
 
 # Add -arch flag for nvcc
 CUDAFLAGS += -arch=$(GPU_ARCH)
