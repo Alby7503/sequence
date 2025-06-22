@@ -361,8 +361,6 @@ int main(int argc, char *argv[]) {
     /* 3. Start global timer */
     MPI_Barrier(MPI_COMM_WORLD);
     timer = cp_Wtime() - timer;
-    // if (rank == 0)
-    //        printf("Initialization time: %lf\n", timer);
     double ttotal = cp_Wtime();
 
     /*
@@ -370,8 +368,6 @@ int main(int argc, char *argv[]) {
      * START HERE: DO NOT CHANGE THE CODE ABOVE THIS POINT
      *
      */
-    // if (rank == 0)
-    //        printf("START HERE\n");
     /* 2.1. Allocate and fill sequence */
     void *baseptr = NULL;
     char *sequence = NULL;
@@ -485,10 +481,6 @@ int main(int argc, char *argv[]) {
     for (ind = pattern_start; ind < pattern_end; ind++) {
         pat_found[ind] = NOT_FOUND;
     }
-    /*#pragma omp parallel for private(lind)
-        for (lind = displs[rank]; lind < displs[rank] + recvcounts[rank]; lind++) {
-            seq_matches[lind] = NOT_FOUND;
-        }*/
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* 5. Search for each pattern */
@@ -503,11 +495,6 @@ int main(int argc, char *argv[]) {
         /* 5.1. For each posible starting position */
         for (start = 0; start <= max_start; start++) {
             //     /* 5.1.1. For each pattern element */
-            //     for (lind = 0; lind < pat_length[pat]; lind++) {
-            //         /* Stop this test when different nucleotids are found */
-            //     if (sequence[start + lind] != pattern[pat][lind])
-            //         break;
-
             if (memcmp(sequence + start, current_pattern, current_pat_length) == 0) {
                 pat_matches++;
                 pat_found[pat] = start;
@@ -515,19 +502,7 @@ int main(int argc, char *argv[]) {
                 break; // Pattern trovato, passa al successivo
             }
         }
-        /* 5.1.2. Check if the loop ended with a match */
-        // if (lind == pat_length[pat]) {
-        //     pat_matches++;
-        //     pat_found[pat] = start;
-        //     break;
-        // }
     }
-
-    /* 5.2. Pattern found */
-    // if (pat_found[pat] != NOT_FOUND) {
-    //     /* 4.2.1. Increment the number of pattern matches on the sequence positions */
-    //     increment_matches(pat, pat_found, pat_length, seq_matches);
-    // }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
