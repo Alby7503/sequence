@@ -27,7 +27,8 @@ GPU_ARCH := $(shell \
 CUDAFLAGS += -arch=$(GPU_ARCH)
 
 # Targets to build
-OBJS = align_seq align_omp align_mpi align_cuda align_mpi_omp align_seq_new align_mpi_omp_2
+#OBJS = align_seq align_omp align_mpi align_cuda align_mpi_omp align_seq_new align_mpi_omp_2
+OBJS = align_seq_new align_cuda align_mpi_omp_2
 
 # Rules. By default show help
 help:

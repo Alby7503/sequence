@@ -1,0 +1,1 @@
+rsync -avz --exclude-from='.rsync-exclude' --chmod=Du=rwx,Dgo=,Fu=rwx,Fgo= -r ./ vona_2068261@192.168.0.102:/home/vona_2068261/sequence
