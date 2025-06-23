@@ -68,6 +68,10 @@ align_cuda: align_cuda.cu rng.c
 	@echo "Compiling CUDA version with architecture $(GPU_ARCH)..."
 	$(CUDACC) $(CUDAFLAGS) $< $(LIBS) -o $@
 
+align_cuda_copy: align_cuda_copy.cu rng.c
+	@echo "Compiling CUDA copy version with architecture $(GPU_ARCH)..."
+	$(CUDACC) $(CUDAFLAGS) $< $(LIBS) -o $@
+
 align_mpi_omp_2: align_mpi_omp_2.c rng.c
 	$(MPICC) $(FLAGS) $(OMPFLAG) $< $(LIBS) -o $@
 

@@ -30,7 +30,7 @@ run_and_capture_output() {
   "${cmd[@]}" $args
 }
 
-make align_seq_new align_mpi_omp_2 align_cuda >/dev/null
+make align_seq_new align_mpi_omp_2 align_cuda_copy >/dev/null
 
 echo
 for idx in "${!TESTS[@]}"; do
@@ -41,7 +41,7 @@ for idx in "${!TESTS[@]}"; do
   # Definizione comandi
   seq_cmd=(./align_seq_new)
   mpi_cmd=(mpirun -np "$MPI_NUMBER_PROC" $MPI_FLAGS ./align_mpi_omp_2)
-  cuda_cmd=(./align_cuda)
+  cuda_cmd=(./align_cuda_copy)
 
   # Esecuzioni
   out_seq=$(run_and_capture_output seq_cmd "$params")
