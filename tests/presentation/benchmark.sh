@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#: "${MPI_NUMBER_PROC:?Devi impostare MPI_NUMBER_PROC}"
+: "${MPI_NUMBER_PROC:?Devi impostare MPI_NUMBER_PROC}"
 : "${MPI_FLAGS:=}"
 
 readonly TESTS=(
@@ -10,7 +10,7 @@ readonly TESTS=(
   "10000 0.35 0.2 0.25 0 0 0 10000 9000 9000 50 100 M 4353435"
   "429496730 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224"
   "4294967300 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224"
-  "10000000 0.25 0.5 0.25 100000 500 50 0 1 1 1 1 M 12345"
+  #"10000000 0.25 0.5 0.25 100000 500 50 0 1 1 1 1 M 12345"
 )
 
 # Estrae la riga che inizia con "Time:" dall'output
@@ -39,8 +39,7 @@ for idx in "${!TESTS[@]}"; do
   echo "=== Test #$testnum: $params ==="
 
   # Definizione comandi
-  #mpi_cmd=(mpirun -np "$MPI_NUMBER_PROC" $MPI_FLAGS ./align_mpi_omp_2)
-  mpi_cmd=(mpirun $MPI_FLAGS ./align_mpi_omp_2)
+  mpi_cmd=(mpirun -np "$MPI_NUMBER_PROC" $MPI_FLAGS ./align_mpi_omp_2)
   cuda_cmd=(./align_cuda_copy)
 
   # Inizializza accumulatori per i tempi (come stringhe numeriche)

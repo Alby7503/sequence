@@ -1,0 +1,24 @@
+avona@dgx008:~/sequence$ ./align_seq_new 300 0.1 0.3 0.35 100 5 5 300 150 50 150 80 M 609823
+
+Time: 0.000211
+Result: 336, 38006, 43767
+
+avona@dgx008:~/sequence$ ./align_seq_new 1000 0.35 0.2 0.25 0 0 0 20000 10 0 500 0 M 4353435
+
+Time: 0.011679
+Result: 20000, 38680, 3395
+
+avona@dgx008:~/sequence$ ./align_seq_new 10000 0.35 0.2 0.25 0 0 0 10000 9000 9000 50 100 M 4353435
+
+Time: 0.062118
+Result: 10000, 31870, 44193
+
+avona@dgx008:~/sequence$ ./align_seq_new 429496730 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224
+
+Time: 1.233039
+Result: 1, 2, 1
+
+avona@dgx008:~/sequence$ ./align_seq_new 4294967300 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224
+
+Time: 11.999687
+Result: 1, 2, 1
