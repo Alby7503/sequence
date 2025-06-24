@@ -28,7 +28,7 @@ CUDAFLAGS += -arch=$(GPU_ARCH)
 
 # Targets to build
 #OBJS = align_seq align_omp align_mpi align_cuda align_mpi_omp align_seq_new align_mpi_omp_2
-OBJS = align_seq_new align_cuda align_mpi_omp_2
+OBJS = align_seq_new align_cuda_copy align_mpi_omp_2
 
 # Rules. By default show help
 help:
@@ -49,8 +49,17 @@ help:
 
 all: $(OBJS)
 
+align_seq: align.c rng.c
+	$(CC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
+
 align_seq_new: align_new.c rng.c
 	$(CC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
+
+align_omp: align_omp.c rng.c
+	$(CC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
+
+align_mpi: align_mpi.c rng.c
+	$(MPICC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
 
 align_mpi_omp: align_mpi_omp.c rng.c
 	$(MPICC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o $@
@@ -58,6 +67,13 @@ align_mpi_omp: align_mpi_omp.c rng.c
 align_cuda: align_cuda.cu rng.c
 	@echo "Compiling CUDA version with architecture $(GPU_ARCH)..."
 	$(CUDACC) $(CUDAFLAGS) $< $(LIBS) -o $@
+
+align_cuda_copy: align_cuda_copy.cu rng.c
+	@echo "Compiling CUDA copy version with architecture $(GPU_ARCH)..."
+	$(CUDACC) $(CUDAFLAGS) $< $(LIBS) -o $@
+
+align_mpi_omp_2: align_mpi_omp_2.c rng.c
+	$(MPICC) $(FLAGS) $(OMPFLAG) $< $(LIBS) -o $@
 
 # Remove the target files
 clean:

@@ -1,0 +1,246 @@
+avona@dgx005:~/sequence$ ./tests/presentation/all_zeus.sh 
+
+=== Test #1: 300 0.1 0.3 0.35 100 5 5 300 150 50 150 80 M 609823 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 336, 38006, 43767 [Time: 0.044553]
+  MPI run #2 -> Result: 336, 38006, 43767 [Time: 0.029325]
+  MPI run #3 -> Result: 336, 38006, 43767 [Time: 0.027917]
+  MPI run #4 -> Result: 336, 38006, 43767 [Time: 0.052672]
+  MPI run #5 -> Result: 336, 38006, 43767 [Time: 0.033429]
+  MPI run #6 -> Result: 336, 38006, 43767 [Time: 0.039682]
+  MPI run #7 -> Result: 336, 38006, 43767 [Time: 0.048650]
+  MPI run #8 -> Result: 336, 38006, 43767 [Time: 0.063782]
+  MPI run #9 -> Result: 336, 38006, 43767 [Time: 0.064347]
+  MPI run #10 -> Result: 336, 38006, 43767 [Time: 0.050489]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 336, 38006, 43767 [Time: 0.001402]
+  CUDA run #2 -> Result: 336, 38006, 43767 [Time: 0.001390]
+  CUDA run #3 -> Result: 336, 38006, 43767 [Time: 0.001375]
+  CUDA run #4 -> Result: 336, 38006, 43767 [Time: 0.005203]
+  CUDA run #5 -> Result: 336, 38006, 43767 [Time: 0.004742]
+  CUDA run #6 -> Result: 336, 38006, 43767 [Time: 0.001340]
+  CUDA run #7 -> Result: 336, 38006, 43767 [Time: 0.004097]
+  CUDA run #8 -> Result: 336, 38006, 43767 [Time: 0.001773]
+  CUDA run #9 -> Result: 336, 38006, 43767 [Time: 0.005364]
+  CUDA run #10 -> Result: 336, 38006, 43767 [Time: 0.001342]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.045485
+  Media CUDA su 10 run: 0.002803
+
+=== Test #2: 1000 0.35 0.2 0.25 0 0 0 20000 10 0 500 0 M 4353435 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 20000, 38680, 3395 [Time: 0.034510]
+  MPI run #2 -> Result: 20000, 38680, 3395 [Time: 0.054822]
+  MPI run #3 -> Result: 20000, 38680, 3395 [Time: 0.021278]
+  MPI run #4 -> Result: 20000, 38680, 3395 [Time: 0.026855]
+  MPI run #5 -> Result: 20000, 38680, 3395 [Time: 0.043385]
+  MPI run #6 -> Result: 20000, 38680, 3395 [Time: 0.020411]
+  MPI run #7 -> Result: 20000, 38680, 3395 [Time: 0.019521]
+  MPI run #8 -> Result: 20000, 38680, 3395 [Time: 0.019041]
+  MPI run #9 -> Result: 20000, 38680, 3395 [Time: 0.023939]
+  MPI run #10 -> Result: 20000, 38680, 3395 [Time: 0.034544]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 20000, 38680, 3395 [Time: 0.001595]
+  CUDA run #2 -> Result: 20000, 38680, 3395 [Time: 0.003792]
+  CUDA run #3 -> Result: 20000, 38680, 3395 [Time: 0.001615]
+  CUDA run #4 -> Result: 20000, 38680, 3395 [Time: 0.002998]
+  CUDA run #5 -> Result: 20000, 38680, 3395 [Time: 0.002655]
+  CUDA run #6 -> Result: 20000, 38680, 3395 [Time: 0.001610]
+  CUDA run #7 -> Result: 20000, 38680, 3395 [Time: 0.001624]
+  CUDA run #8 -> Result: 20000, 38680, 3395 [Time: 0.001630]
+  CUDA run #9 -> Result: 20000, 38680, 3395 [Time: 0.001589]
+  CUDA run #10 -> Result: 20000, 38680, 3395 [Time: 0.004288]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.029831
+  Media CUDA su 10 run: 0.002340
+
+=== Test #3: 10000 0.35 0.2 0.25 0 0 0 10000 9000 9000 50 100 M 4353435 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 10000, 31870, 44193 [Time: 0.079717]
+  MPI run #2 -> Result: 10000, 31870, 44193 [Time: 0.058499]
+  MPI run #3 -> Result: 10000, 31870, 44193 [Time: 0.044068]
+  MPI run #4 -> Result: 10000, 31870, 44193 [Time: 0.056767]
+  MPI run #5 -> Result: 10000, 31870, 44193 [Time: 0.063801]
+  MPI run #6 -> Result: 10000, 31870, 44193 [Time: 0.046160]
+  MPI run #7 -> Result: 10000, 31870, 44193 [Time: 0.066756]
+  MPI run #8 -> Result: 10000, 31870, 44193 [Time: 0.070790]
+  MPI run #9 -> Result: 10000, 31870, 44193 [Time: 0.069432]
+  MPI run #10 -> Result: 10000, 31870, 44193 [Time: 0.064521]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 10000, 31870, 44193 [Time: 0.067668]
+  CUDA run #2 -> Result: 10000, 31870, 44193 [Time: 0.074291]
+  CUDA run #3 -> Result: 10000, 31870, 44193 [Time: 0.067200]
+  CUDA run #4 -> Result: 10000, 31870, 44193 [Time: 0.068395]
+  CUDA run #5 -> Result: 10000, 31870, 44193 [Time: 0.069249]
+  CUDA run #6 -> Result: 10000, 31870, 44193 [Time: 0.063049]
+  CUDA run #7 -> Result: 10000, 31870, 44193 [Time: 0.067798]
+  CUDA run #8 -> Result: 10000, 31870, 44193 [Time: 0.066102]
+  CUDA run #9 -> Result: 10000, 31870, 44193 [Time: 0.062459]
+  CUDA run #10 -> Result: 10000, 31870, 44193 [Time: 0.062631]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.062051
+  Media CUDA su 10 run: 0.066884
+
+=== Test #4: 429496730 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 1, 2, 1 [Time: 1.698381]
+  MPI run #2 -> Result: 1, 2, 1 [Time: 1.673479]
+  MPI run #3 -> Result: 1, 2, 1 [Time: 1.617022]
+  MPI run #4 -> Result: 1, 2, 1 [Time: 1.590236]
+  MPI run #5 -> Result: 1, 2, 1 [Time: 1.614111]
+  MPI run #6 -> Result: 1, 2, 1 [Time: 1.657107]
+  MPI run #7 -> Result: 1, 2, 1 [Time: 1.639892]
+  MPI run #8 -> Result: 1, 2, 1 [Time: 1.598837]
+  MPI run #9 -> Result: 1, 2, 1 [Time: 1.574663]
+  MPI run #10 -> Result: 1, 2, 1 [Time: 1.710906]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 1, 2, 1 [Time: 1.784366]
+  CUDA run #2 -> Result: 1, 2, 1 [Time: 1.791678]
+  CUDA run #3 -> Result: 1, 2, 1 [Time: 1.798422]
+  CUDA run #4 -> Result: 1, 2, 1 [Time: 1.789070]
+  CUDA run #5 -> Result: 1, 2, 1 [Time: 1.793143]
+  CUDA run #6 -> Result: 1, 2, 1 [Time: 1.789074]
+  CUDA run #7 -> Result: 1, 2, 1 [Time: 1.787980]
+  CUDA run #8 -> Result: 1, 2, 1 [Time: 1.803572]
+  CUDA run #9 -> Result: 1, 2, 1 [Time: 1.796730]
+  CUDA run #10 -> Result: 1, 2, 1 [Time: 1.787678]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 1.637463
+  Media CUDA su 10 run: 1.792171
+
+=== Test #5: 4294967300 0.35 0.2 0.25 0 0 0 1 1 0 4294967298 0 M 683224 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 1, 2, 1 [Time: 1.964226]
+  MPI run #2 -> Result: 1, 2, 1 [Time: 1.983912]
+  MPI run #3 -> Result: 1, 2, 1 [Time: 1.908888]
+  MPI run #4 -> Result: 1, 2, 1 [Time: 1.987386]
+  MPI run #5 -> Result: 1, 2, 1 [Time: 1.972499]
+  MPI run #6 -> Result: 1, 2, 1 [Time: 1.886398]
+  MPI run #7 -> Result: 1, 2, 1 [Time: 1.944445]
+  MPI run #8 -> Result: 1, 2, 1 [Time: 2.030856]
+  MPI run #9 -> Result: 1, 2, 1 [Time: 1.989718]
+  MPI run #10 -> Result: 1, 2, 1 [Time: 1.979705]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 1, 2, 1 [Time: 18.069390]
+  CUDA run #2 -> Result: 1, 2, 1 [Time: 19.164004]
+  CUDA run #3 -> Result: 1, 2, 1 [Time: 18.134112]
+  CUDA run #4 -> Result: 1, 2, 1 [Time: 18.174818]
+  CUDA run #5 -> Result: 1, 2, 1 [Time: 18.081654]
+  CUDA run #6 -> Result: 1, 2, 1 [Time: 18.154396]
+  CUDA run #7 -> Result: 1, 2, 1 [Time: 18.355600]
+  CUDA run #8 -> Result: 1, 2, 1 [Time: 18.123129]
+  CUDA run #9 -> Result: 1, 2, 1 [Time: 18.085793]
+  CUDA run #10 -> Result: 1, 2, 1 [Time: 18.081549]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 1.964803
+  Media CUDA su 10 run: 18.242444
+
+=== Test #6: 600000 0.35 0.2 0.25 35000 1500 1000 25000 1500 500 500 100 M 4353435 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 30034, 37274, 41408 [Time: 0.542175]
+  MPI run #2 -> Result: 30034, 37274, 41408 [Time: 0.523572]
+  MPI run #3 -> Result: 30034, 37274, 41408 [Time: 0.553450]
+  MPI run #4 -> Result: 30034, 37274, 41408 [Time: 0.539597]
+  MPI run #5 -> Result: 30034, 37274, 41408 [Time: 0.514301]
+  MPI run #6 -> Result: 30034, 37274, 41408 [Time: 0.532181]
+  MPI run #7 -> Result: 30034, 37274, 41408 [Time: 0.508851]
+  MPI run #8 -> Result: 30034, 37274, 41408 [Time: 0.489031]
+  MPI run #9 -> Result: 30034, 37274, 41408 [Time: 0.546288]
+  MPI run #10 -> Result: 30034, 37274, 41408 [Time: 0.492021]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 30034, 37274, 41408 [Time: 0.950858]
+  CUDA run #2 -> Result: 30034, 37274, 41408 [Time: 0.935499]
+  CUDA run #3 -> Result: 30034, 37274, 41408 [Time: 0.918409]
+  CUDA run #4 -> Result: 30034, 37274, 41408 [Time: 0.938918]
+  CUDA run #5 -> Result: 30034, 37274, 41408 [Time: 0.924331]
+  CUDA run #6 -> Result: 30034, 37274, 41408 [Time: 1.047320]
+  CUDA run #7 -> Result: 30034, 37274, 41408 [Time: 0.932858]
+  CUDA run #8 -> Result: 30034, 37274, 41408 [Time: 0.927498]
+  CUDA run #9 -> Result: 30034, 37274, 41408 [Time: 0.938830]
+  CUDA run #10 -> Result: 30034, 37274, 41408 [Time: 0.980199]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.524147
+  Media CUDA su 10 run: 0.949472
+
+=== Test #7: 800000 0.2 0.35 0.25 40000 2500 200 25000 1800 200 400 50 M 1047392 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 32500, 9731, 57244 [Time: 0.760093]
+  MPI run #2 -> Result: 32500, 9731, 57244 [Time: 0.698610]
+  MPI run #3 -> Result: 32500, 9731, 57244 [Time: 0.688997]
+  MPI run #4 -> Result: 32500, 9731, 57244 [Time: 0.737533]
+  MPI run #5 -> Result: 32500, 9731, 57244 [Time: 0.748438]
+  MPI run #6 -> Result: 32500, 9731, 57244 [Time: 0.699778]
+  MPI run #7 -> Result: 32500, 9731, 57244 [Time: 0.806891]
+  MPI run #8 -> Result: 32500, 9731, 57244 [Time: 0.728110]
+  MPI run #9 -> Result: 32500, 9731, 57244 [Time: 0.708232]
+  MPI run #10 -> Result: 32500, 9731, 57244 [Time: 0.731418]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 32500, 9731, 57244 [Time: 0.523740]
+  CUDA run #2 -> Result: 32500, 9731, 57244 [Time: 0.510832]
+  CUDA run #3 -> Result: 32500, 9731, 57244 [Time: 0.519268]
+  CUDA run #4 -> Result: 32500, 9731, 57244 [Time: 0.531585]
+  CUDA run #5 -> Result: 32500, 9731, 57244 [Time: 0.535210]
+  CUDA run #6 -> Result: 32500, 9731, 57244 [Time: 0.528507]
+  CUDA run #7 -> Result: 32500, 9731, 57244 [Time: 0.510810]
+  CUDA run #8 -> Result: 32500, 9731, 57244 [Time: 0.513467]
+  CUDA run #9 -> Result: 32500, 9731, 57244 [Time: 0.511013]
+  CUDA run #10 -> Result: 32500, 9731, 57244 [Time: 0.529571]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.730810
+  Media CUDA su 10 run: 0.521400
+
+=== Test #8: 750000 0.25 0.2 0.35 30000 3500 800 25000 1200 900 350 80 B 9472048 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 25000, 9563, 17802 [Time: 0.915748]
+  MPI run #2 -> Result: 25000, 9563, 17802 [Time: 1.034108]
+  MPI run #3 -> Result: 25000, 9563, 17802 [Time: 0.968313]
+  MPI run #4 -> Result: 25000, 9563, 17802 [Time: 0.994289]
+  MPI run #5 -> Result: 25000, 9563, 17802 [Time: 0.922258]
+  MPI run #6 -> Result: 25000, 9563, 17802 [Time: 1.044338]
+  MPI run #7 -> Result: 25000, 9563, 17802 [Time: 0.966715]
+  MPI run #8 -> Result: 25000, 9563, 17802 [Time: 0.917965]
+  MPI run #9 -> Result: 25000, 9563, 17802 [Time: 0.988887]
+  MPI run #10 -> Result: 25000, 9563, 17802 [Time: 0.991933]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 25000, 9563, 17802 [Time: 1.420095]
+  CUDA run #2 -> Result: 25000, 9563, 17802 [Time: 1.433397]
+  CUDA run #3 -> Result: 25000, 9563, 17802 [Time: 1.384231]
+  CUDA run #4 -> Result: 25000, 9563, 17802 [Time: 1.399997]
+  CUDA run #5 -> Result: 25000, 9563, 17802 [Time: 1.421384]
+  CUDA run #6 -> Result: 25000, 9563, 17802 [Time: 1.498892]
+  CUDA run #7 -> Result: 25000, 9563, 17802 [Time: 1.419545]
+  CUDA run #8 -> Result: 25000, 9563, 17802 [Time: 1.437150]
+  CUDA run #9 -> Result: 25000, 9563, 17802 [Time: 1.417729]
+  CUDA run #10 -> Result: 25000, 9563, 17802 [Time: 1.422416]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.974455
+  Media CUDA su 10 run: 1.425484
+
+=== Test #9: 600000 0.2 0.25 0.2 20000 1000 100 25000 1300 100 275 90 A 7305729 ===
+-- Esecuzioni MPI (10 run) --
+  MPI run #1 -> Result: 25000, 50893, 48806 [Time: 0.608533]
+  MPI run #2 -> Result: 25000, 50893, 48806 [Time: 0.602621]
+  MPI run #3 -> Result: 25000, 50893, 48806 [Time: 0.605542]
+  MPI run #4 -> Result: 25000, 50893, 48806 [Time: 0.613008]
+  MPI run #5 -> Result: 25000, 50893, 48806 [Time: 0.620125]
+  MPI run #6 -> Result: 25000, 50893, 48806 [Time: 0.610955]
+  MPI run #7 -> Result: 25000, 50893, 48806 [Time: 0.614785]
+  MPI run #8 -> Result: 25000, 50893, 48806 [Time: 0.590058]
+  MPI run #9 -> Result: 25000, 50893, 48806 [Time: 0.617296]
+  MPI run #10 -> Result: 25000, 50893, 48806 [Time: 0.628628]
+-- Esecuzioni CUDA (10 run) --
+  CUDA run #1 -> Result: 25000, 50893, 48806 [Time: 0.294525]
+  CUDA run #2 -> Result: 25000, 50893, 48806 [Time: 0.292590]
+  CUDA run #3 -> Result: 25000, 50893, 48806 [Time: 0.293523]
+  CUDA run #4 -> Result: 25000, 50893, 48806 [Time: 0.314004]
+  CUDA run #5 -> Result: 25000, 50893, 48806 [Time: 0.308531]
+  CUDA run #6 -> Result: 25000, 50893, 48806 [Time: 0.294207]
+  CUDA run #7 -> Result: 25000, 50893, 48806 [Time: 0.319420]
+  CUDA run #8 -> Result: 25000, 50893, 48806 [Time: 0.303985]
+  CUDA run #9 -> Result: 25000, 50893, 48806 [Time: 0.292066]
+  CUDA run #10 -> Result: 25000, 50893, 48806 [Time: 0.320603]
+-- Medie dei tempi --
+  Media MPI  su 10 run: 0.611155
+  Media CUDA su 10 run: 0.303345
+
+🎉 Tutti i test MPI/CUDA sono stati eseguiti (10 run ciascuno).

@@ -8,6 +8,7 @@ align_omp
 align_mpi_omp
 align_mpi_omp_2
 align_cuda
+align_cuda_copy
 align_seq.txt
 LICENSE
 README
